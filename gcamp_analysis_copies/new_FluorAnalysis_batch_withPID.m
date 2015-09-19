@@ -53,6 +53,10 @@ for TS_idx = 1:length(TS_listing)
         clear runningTotIm;
     end
     
+    % While in imDir, read and save the PID info. 
+    PID_list = dir('*.csv');
+    [PID_fig, PID_figName] = PID_Plot_func(PID_list(1,1).name);
+    
     %% Get the value of framePer for this image stack. Modified From RosettaCode
     % "This is defined as a function, parameters are returned as part
     % of a struct. When the first line, and the assignment to return
@@ -251,6 +255,8 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     
     save(baselineF0_FileName, 'F_0'); % Save the baseline (F_0)! 
     
+    saveas(PID_fig,PID_figName,'fig');
+    
     cd(currentDirectory);
     % % % Previously: Save a copy of each variable in the containing folder:
     % cd(parentDir)
@@ -287,6 +293,7 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     % % ylimits = ylim;
     % % maxY = max(delFoverF);
     % % line([3 0.01],[3 maxY],[1 1],'Marker','.','LineStyle','-')
+    
     displayLine = ['Analysis for  ' ...
         currentDirectory(strfind(currentDirectory, '201'):end) ...
         ' completed.'];
