@@ -1,9 +1,12 @@
 function [ROI,roiName] = drawROI()
 
 origDir = pwd;  % Remember where we started. 
+DispRange = [0, 10000]; % DisplayRange parameters to use (min, max)
 
 % Get folder of images to use for ROI
-rawImsDir = uigetdir('Choose a folder of raw tif images on which to load for ROI selection:'); 
+dialog = 'Choose a folder of raw tif images on which to load for ROI selection:';
+disp(dialog)
+rawImsDir = uigetdir(origDir,dialog); 
 cd(rawImsDir);  
 
 tifIm = dir('*.tif');
@@ -27,10 +30,12 @@ getAllChAvg = 1;
     end
     
     % Make ROI:
-    disp('Please draw an ROI on the figure and double-click when done.')
-    ROI = roipoly(runningTotIm);
+    fig = figure; 
+    disp('Please draw an ROI on the figure and double-click on figure when done.')
+    imShown = imshow(runningTotIm,'DisplayRange',DispRange); 
+    ROI = roipoly;
     ROI = uint16(ROI);
-    close; 
+    close;
     
     % Get name for ROI: 
     roiName = input('Input name for ROI: ','s');

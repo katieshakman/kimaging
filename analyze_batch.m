@@ -3,14 +3,21 @@
 % temp script, can modify for analysis of a given set of trials (organized
 % in folders by odor).
 
-% clear all; close all; 
-
 % add necessary dirs to search path: 
 % addpath('/Users/katieshak/code/kimaging/gcamp_analysis_copies') 
+% OR
+% addpath(genpath('/Users/katherineshakman/code/kimaging/gcamp_analysis_copies'))
+
+% May also need to add the folders where the data will be, e.g.:
+% addpath(genpath('/Volumes/KATIELAB1/Raw_Unprocessed/'))
+% addpath(genpath('/Volumes/KATIELAB1/Data_Analysis/'))
+
+% clear all; close all; % if not using as a function
 
 % Check that 'names' is the same in both cells below. 
 
 function [] = analyze_batch(raw_folder)
+
 %% Inital analysis of raw data (navigate to desired parent folder first)
 
 % To prespecify starting folder:
@@ -19,6 +26,10 @@ function [] = analyze_batch(raw_folder)
 % % To let user load starting folder:
 % raw_folder = uigetdir('','Select raw data folder');
 % cd(raw_folder);
+% OR
+if ~exist('raw_folder','var')
+    raw_folder = pwd; 
+end
 
 % Get subfolder names (one for each odor/stim, generally)
 folders = dir(); 
@@ -54,8 +65,9 @@ display('Preprocessing done.');
 
 findPattern = 'Raw_Unprocessed/'; newPattern = 'Data_Analysis/';
 % an_folder = strrep(raw_folder, findPattern, newPattern); 
-%To let user load an_folder:
-an_folder = uigetdir('','Select analysis folder');
+%To let user load an_folder (starting from expected an_folder):
+analysis_path = strrep(raw_folder, findPattern, newPattern); 
+an_folder = uigetdir(analysis_path,'Select analysis folder');
 
 cd(an_folder);
 % try
@@ -90,3 +102,4 @@ for nameIdx = 1:length(names)
 end
 
 display('Analysis done.');
+end
