@@ -1,5 +1,6 @@
+function newFluorAnalysis_batch_withPID_func(ROI, roiName)
 
-%% Fluorescence Analysis
+%%% Fluorescence Analysis
 % Code to process GCaMP calcium imaging Tseries (from 2-photon).
 % What it does/will do:
 % Reads image, allows selection of an ROI, gets fluorescence information
@@ -10,11 +11,15 @@
 % Ch1 : red PMT 1 HV (RFP)
 % Ch2 : green gaasp (GCaMP or GFP)
 % Ch3 : dodt (transmitted light)
-clear all; close all; 
-%% Option to add ROIs interactively. 
-useROI = 1; % set to 0 for no ROI, or to 1 for one or more ROIs. 
-%% Compile list of Tseries directories in current folder.
-myFolder = pwd; 
+
+% clear all; close all;
+%%% Option to add ROIs interactively. 
+useROI = 1; % set to 0 for no ROI, or to 1 for one or more ROIs.  
+%%% Option to gather PID data. 
+usePID = 0; % set to 0 for ignoring PID data, or to 1 to get/plot PID data.
+
+%%% Compile list of Tseries directories in current folder.
+myFolder = pwd;
 TS_listing = dir('Tseries*');
 if isempty(TS_listing)
     TS_listing = dir('TSeries*');
@@ -22,13 +27,15 @@ if isempty(TS_listing)
         display('No TSeries found in directory.')
     end
 end
-%% Indicate whether to use long format directory name for saving dir.
-LongSavePath = 1; 
-%% Read the image (and get an ROI, if desired).
+
+%%% Indicate whether to use long format directory name for saving dir.
+LongSavePath = 1;
+
+%%% Read the image (and get an ROI, if desired).
 for TS_idx = 1:length(TS_listing)
     close all; 
     % clear all variables except myFolder, TS_listing, and TS_idx:
-    clearvars -except myFolder TS_listing TS_idx LongSavePath useROI ROI; 
+    clearvars -except myFolder TS_listing TS_idx LongSavePath useROI ROI roiName usePID; 
 %     clear all; close all;
 %     imDir = uigetdir(); % Allow user to specify the directory to read images from.
     mySubfolder = TS_listing(TS_idx).name; 
@@ -54,8 +61,9 @@ for TS_idx = 1:length(TS_listing)
         avgIm = runningTotIm./length(tifIm);
     end
     % Make ROI if desired
-    if useROI 
-        if ~exist('ROI')
+    if useROI == 1
+        if ~exist('ROI') || isempty('ROI')
+            disp('Please draw an ROI on the figure and double-click when done.')
             ROI = roipoly(runningTotIm);
             ROI = uint16(ROI);
         else
@@ -66,13 +74,17 @@ for TS_idx = 1:length(TS_listing)
         end
         % Mask average image with ROI. 
         avgIm = ROI.*avgIm; 
+    elseif useROI == 2
+          % load ROI  
     else
         ROI = ones(size(avgIm)); 
     end
     
     % While in imDir, read and save the PID info. 
-    PID_list = dir('*.csv');
-    [PID_fig, PID_figName] = PID_Plot_func(PID_list(1,1).name);
+    if usePID == 1
+        PID_list = dir('*.csv');
+        [PID_fig, PID_figName] = PID_Plot_func(PID_list(1,1).name);
+    end
     
     %% Get the value of framePer for this image stack. Modified From RosettaCode
     % "This is defined as a function, parameters are returned as part
@@ -84,32 +96,32 @@ for TS_idx = 1:length(TS_listing)
     
     % configfile = dir('*.cfg'); % Changed from uigetfile to dir
     %c = dir('*.cfg');
-% %     c = dir('*.xml');
-% %     configfile = c.name; %c(1,1).name;
-% %     fid = fopen(configfile);
-% %     if fid<0, error('cannot open file %s\n',a); end;
-% %     
-% %     while ~feof(fid)
-% %         line = strtrim(fgetl(fid));
-% %         framePerLocation = strfind(line, 'framePeriod=');
-% %         if ~isempty(framePerLocation)
-% %             framePerLine = line;
-% %             %     else isempty(line) || all(isspace(line)) || strncmp(line,'#',1) || strncmp(line,';',1),
-% %             %         ; % no operation
-% %         else
-% %             framePerLine = framePerLocation; 
-% %         end;
-% %     end;
-% %     fclose(fid);
-% %     % whos,     % shows the parameter in the local workspace
-
-c = dir('TS*.xml');
-myXML = c.name;
-mytext = fileread(myXML); 
-framePerLoc = strfind(mytext, 'framePeriod" value="');
-framePerStrLen = length('framePeriod" value="'); 
-framePerEnd = framePerLoc + framePerStrLen + 10;  % can be adjusted to auto-length later 
-framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
+    % %     c = dir('*.xml');
+    % %     configfile = c.name; %c(1,1).name;
+    % %     fid = fopen(configfile);
+    % %     if fid<0, error('cannot open file %s\n',a); end;
+    % %
+    % %     while ~feof(fid)
+    % %         line = strtrim(fgetl(fid));
+    % %         framePerLocation = strfind(line, 'framePeriod=');
+    % %         if ~isempty(framePerLocation)
+    % %             framePerLine = line;
+    % %             %     else isempty(line) || all(isspace(line)) || strncmp(line,'#',1) || strncmp(line,';',1),
+    % %             %         ; % no operation
+    % %         else
+    % %             framePerLine = framePerLocation;
+    % %         end;
+    % %     end;
+    % %     fclose(fid);
+    % %     % whos,     % shows the parameter in the local workspace
+    
+    c = dir('TS*.xml');
+    myXML = c.name;
+    mytext = fileread(myXML);
+    framePerLoc = strfind(mytext, 'framePeriod" value="');
+    framePerStrLen = length('framePeriod" value="');
+    framePerEnd = framePerLoc + framePerStrLen + 10;  % can be adjusted to auto-length later
+    framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     % Now copy the repetitionPeriod value out of the line we just found:
     %repPerLoc = strfind(framePerLine, 'repetitionPeriod="');
     % repetitionPeriod seems to be framePeriod (probably not scanLinePeriod) in new prairieView
@@ -162,7 +174,7 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     %     title('figure3')
     % end
     
-    %% Get GCaMP average at each time point; convert to delF/F.
+    %%% Get GCaMP average at each time point; convert to delF/F.
     % TODO: Add in ROI restriction.
     % Do this only for the part of tifIm that is Ch1 (GCaMP)
     
@@ -183,12 +195,14 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     % tifImCh1_indices = tifImCh1_indices * ones(length(tifImCh1_indices));
     maxTime = length(tifImCh1_indices);
     CaAvgDenom = 512*512; % Total number of pixels per slice.
-    % TODO: Change the above (CaAvgDenom) to get the true image (or ROI) size.
+     % TODO: Change the above (CaAvgDenom) to get the true image (or ROI) size.
     
     for timeIdx = 1:maxTime
         currTif = imread(tifIm(timeIdx).name) ;
-        % Mask all images in stack and avg image with ROI:
-        currTif = ROI.*currTif; 
+        % Mask all images in stack and avg image with ROI (if using):
+        if useROI
+            currTif = ROI.*currTif;
+        end
         CaAvg(timeIdx) = sum(sum( currTif )) / CaAvgDenom; % Avg Signal in frame normalized to the image size. 
     end
     timePt3sec = 3/framePerVal; % 3sec*(1/(sec/frame)) = 3sec/framePerVal
@@ -255,11 +269,19 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
         saveas(heatmap_fig,heatmap_figName,'fig');
 
     %
-    %% Save data to a file containing the Tseries name
+%     for timeIdx = 1:maxTime
+%         delF(timeIdx) = CaAvg(timeIdx) - F_0;
+%         delFoverF(timeIdx) = delF(timeIdx)/F_0;
+%     end
+%     timePoints = [ 1:maxTime ] .* framePerVal;
+%     % Above: time is in sec, framePerVal is in sec/frame --> divide by framePer
+%     % allTimePoints = [framePerVal:maxTime];
+    
+    %%% Save data to a file containing the Tseries name
     currentDirectory = pwd;
     TseriesLoc = strfind(currentDirectory, 'TSeries-');
     if isempty(TseriesLoc)
-       TseriesLoc = strfind(currentDirectory, 'Tseries-'); 
+        TseriesLoc = strfind(currentDirectory, 'Tseries-');
     end
     cd ..
     parentDir = pwd;
@@ -309,11 +331,13 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
             currentDirectory, 'eries')-4);
         saveDirectory = strcat(prefixDirectory, '/Data_Analysis/', ...
             savePath);
-
+        
     end
     
     if useROI == 1 % if using ROI setting
-        roiName = input('Input name for ROI: ','s');
+        %         roiName = input('Input name for ROI: ','s');
+        disp('ROI name is: '); disp(roiName); 
+        
         saveDirectory = [saveDirectory roiName];
     end
     
@@ -326,9 +350,11 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     
     save(delFoverF_FileName, 'delFoverF');
     
-    save(baselineF0_FileName, 'F_0'); % Save the baseline (F_0)! 
+    save(baselineF0_FileName, 'F_0'); % Save the baseline (F_0)!
     
-    saveas(PID_fig,PID_figName,'fig');
+    if usePID == 1
+        saveas(PID_fig,PID_figName,'fig');
+    end
     
     cd(currentDirectory);
     % % % Previously: Save a copy of each variable in the containing folder:
@@ -337,7 +363,7 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     % save(delFoverF_FileName, 'delFoverF');
     % cd(currentDirectory)
     
-    %% Plot GCaMP average versus time.
+    %%% Plot GCaMP average versus time.
     % repetitionPeriod = 0.818748; % Frame period : seconds/frame.
     % repetitionPeriod fetched automatically from config file, stored as framePerVal.
     % timePoints = [ 1:maxTime ] * repetitionPeriod;
@@ -349,7 +375,7 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     title('deltaF/F vs Time')
     % % Add a line at timepoint = 3 sec
     yvals = get(gca, 'ylim');
-    xvalsOn = [3,3]; 
+    xvalsOn = [3,3];
     xvalsOff = [5,5]; % use 4 for Pipette stim, 5 for Odor Deliv.
     lineOn = plot(xvalsOn, yvals);
     lineOff = plot(xvalsOff, yvals);
@@ -371,7 +397,8 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
         currentDirectory(strfind(currentDirectory, '201'):end) ...
         ' completed.'];
     disp(displayLine);
-    %% Demonstration code lines from Daisuke:
+    
+    %%% Demonstration code lines from Daisuke:
     %
     % ans =
     %
@@ -414,4 +441,7 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     % figure;imshow(uint8(roiv1./12))
     % figure;imshow(uint8(roiv1./16))
     cd ../
+    display('new_FluorAnalysis_batch completed');
 end
+
+

@@ -1,13 +1,14 @@
+function PlotAll_DelFoverF_ofType_function()
+
 %% Plot Only Fluor Analysis
 % Plot from previously stored deltaF/F data and timepoints. 
-% clear all; close all;
-
-function [] = PlotAll_DelFoverF_ofType_func()
+clear all; close all;
 
 StartDir = pwd; 
 
 % Variables user can change: 
 x_limits = [2,7];
+y_limits = [-0.1, 2];
 
 %% Load data files from several user-selected directories. 
 imDir = uigetdir(); % Allow user to select directory. 
@@ -122,8 +123,9 @@ for idx = 1:max(size(dFoF, 1))
         end
     end
 end
-% set limits of x axis
+% set limits of x and y axes
 set(gca,'xlim', x_limits);
+% set(gca,'ylim', y_limits);
 
 evokedTrialAvgs = evokedTrialSums/denom; 
 %
@@ -144,10 +146,13 @@ title('deltaF/F vs Time')
 % text(3, delFoverF(3),'\leftarrow (delFoverF(3sec))',...
 %      'HorizontalAlignment','left')
 % title('GCaMP Average vs Time')
-
 % % Add a line at timepoint = 3 sec
+try
+    max_y_vals = y_limits(end)
+catch
     yvals = get(gca, 'ylim');
     max_y_vals = yvals
+end
     
     lineOn = plot(xvalsOn, yvals);
     lineOff = plot(xvalsOff, yvals);
@@ -155,7 +160,6 @@ title('deltaF/F vs Time')
     set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
     set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
 hold off
-
 % Also plot the mean of each column (timePt):
 
 subplot(1,2,2);
@@ -193,6 +197,7 @@ title('Average deltaF/F vs Time')
     %legend
 hold off
 set(gca,'xlim', x_limits);
+% set(gca,'ylim', y_limits); % set y axes to user-specified values
 
 %% Save figure files and evokedAvg value
 dateStart = strfind(imDir, '201'); 

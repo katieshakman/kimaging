@@ -2,7 +2,7 @@
 % Plot from previously stored deltaF/F data and timepoints. 
 % clear all; close all;
 
-function [] = PlotAll_DelFoverF_ofType_func()
+function [] = PlotAll_DelFoverF_ofType_func(imDir)
 
 StartDir = pwd; 
 
@@ -10,8 +10,13 @@ StartDir = pwd;
 x_limits = [2,7];
 
 %% Load data files from several user-selected directories. 
-imDir = uigetdir(); % Allow user to select directory. 
-cd(imDir);
+% imDir = uigetdir(); % Allow user to select directory. 
+% pwdir = pwd; 
+% pwdir = pwdir(end-length(imDir)+1:end);
+% if ~strcmp(pwdir,imDir)
+%     cd(imDir);
+% end
+imDir = pwd; 
 currentDirectory = pwd; % For use in save paths. 
 
 all_delFoverF_files = dir('*delFoverF.mat');

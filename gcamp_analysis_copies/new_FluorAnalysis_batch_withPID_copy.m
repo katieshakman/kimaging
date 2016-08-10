@@ -11,8 +11,6 @@
 % Ch2 : green gaasp (GCaMP or GFP)
 % Ch3 : dodt (transmitted light)
 clear all; close all; 
-%% Option to add ROIs interactively. 
-useROI = 1; % set to 0 for no ROI, or to 1 for one or more ROIs. 
 %% Compile list of Tseries directories in current folder.
 myFolder = pwd; 
 TS_listing = dir('Tseries*');
@@ -24,11 +22,11 @@ if isempty(TS_listing)
 end
 %% Indicate whether to use long format directory name for saving dir.
 LongSavePath = 1; 
-%% Read the image (and get an ROI, if desired).
+%% Read the image (and get an ROI, though this not implemented now).
 for TS_idx = 1:length(TS_listing)
     close all; 
     % clear all variables except myFolder, TS_listing, and TS_idx:
-    clearvars -except myFolder TS_listing TS_idx LongSavePath useROI ROI; 
+    clearvars -except myFolder TS_listing TS_idx LongSavePath; 
 %     clear all; close all;
 %     imDir = uigetdir(); % Allow user to specify the directory to read images from.
     mySubfolder = TS_listing(TS_idx).name; 
@@ -52,22 +50,7 @@ for TS_idx = 1:length(TS_listing)
         end
         % avgIm = zeros(512,512); % Initialize the average image variable.
         avgIm = runningTotIm./length(tifIm);
-    end
-    % Make ROI if desired
-    if useROI 
-        if ~exist('ROI')
-            ROI = roipoly(runningTotIm);
-            ROI = uint16(ROI);
-        else
-            figure; 
-            subplot(1,2,1); imshow(runningTotIm);
-            subplot(1,2,2); imshow(ROI.*(runningTotIm));
-            % TODO: Add a dialog to confirm or adjust ROI.  
-        end
-        % Mask average image with ROI. 
-        avgIm = ROI.*avgIm; 
-    else
-        ROI = ones(size(avgIm)); 
+        clear runningTotIm;
     end
     
     % While in imDir, read and save the PID info. 
@@ -186,10 +169,7 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     % TODO: Change the above (CaAvgDenom) to get the true image (or ROI) size.
     
     for timeIdx = 1:maxTime
-        currTif = imread(tifIm(timeIdx).name) ;
-        % Mask all images in stack and avg image with ROI:
-        currTif = ROI.*currTif; 
-        CaAvg(timeIdx) = sum(sum( currTif )) / CaAvgDenom; % Avg Signal in frame normalized to the image size. 
+        CaAvg(timeIdx) = sum(sum( imread(tifIm(timeIdx).name ))) / CaAvgDenom; % Avg Signal in frame normalized to the image size. 
     end
     timePt3sec = 3/framePerVal; % 3sec*(1/(sec/frame)) = 3sec/framePerVal
     if timePt3sec < 1 || isnan(framePerVal)
@@ -198,63 +178,15 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
         F_0 = mean(CaAvg(1:timePt3sec)); % Average fluorescence up to 3 sec (takes floor of timePt3sec).
     end
     
-    delF = CaAvg - F_0*ones(size(CaAvg));
-    delFoverF = delF/F_0;
+    % TODO: Vectorize below.
+    for timeIdx = 1:maxTime
+        delF(timeIdx) = CaAvg(timeIdx) - F_0;
+        delFoverF(timeIdx) = delF(timeIdx)/F_0;
+    end
     timePoints = [ 1:maxTime ] .* framePerVal;
     % Above: time is in sec, framePerVal is in sec/frame --> divide by framePer
     % allTimePoints = [framePerVal:maxTime];
     
-    %% Make a heatmap from 3 sec to 5 sec
-    % get image after stimulus has been on for 1 second (this should be
-    % time = 4sec)
-    timePt5sec = 5/framePerVal; % to get frame # at which time is 4 sec
-    sec5TifIm = imread(tifIm(ceil(timePt5sec)).name);
-    % Get average baseline image: 
-    % get baseline image, then divide by that image (so each point in image is converted
-    % to its own delF/F0 value). 
-    baseImSum = im2double(imread(tifIm(1).name)); % Inialize to first image.
-    for imIdx=2:ceil(timePt3sec) % Read in baseline images.
-        tempIm = imread(tifIm(imIdx).name);
-        baseImSum = baseImSum + im2double(tempIm);
-    end
-    meanBaseIm = baseImSum/ceil(timePt3sec);
-    clear tempIm; 
-    % Get average stimulus image: 
-    stimImSum = im2double(imread(tifIm(ceil(timePt3sec)).name)); % Inialize to first stim image.
-    for imIdx = 2:ceil(timePt5sec); % Read in stimulus images. 
-        tempIm = imread(tifIm(imIdx).name); 
-        stimImSum = stimImSum + im2double(tempIm);
-    end
-    meanStimIm = stimImSum/(ceil(timePt5sec)-ceil(timePt3sec));
-    stimMap = (meanStimIm-meanBaseIm)./meanBaseIm; 
-     filtBase = imgaussfilt(meanBaseIm, 2);
-     filtStim = imgaussfilt(meanStimIm, 2);
-     filtStimMap = (filtStim-filtBase)./filtBase;
-   
-%     close all; % close all other figures -- use only if testing
-%     figure; colormap('hot');
-%         subplot(1,2,1); imagesc(meanBaseIm); colorbar
-%         subplot(1,2,2); imagesc(filtBase); colorbar
-%         title('Baseline')
-%     figure; colormap('hot'); 
-%         subplot(1,2,1); imagesc(meanStimIm); colorbar
-%         subplot(1,2,2); imagesc(filtStim); colorbar
-%         title('Stimulation')
-%     figure; colormap('hot'); 
-%         subplot(1,2,1); imagesc(meanStimIm-meanBaseIm); colorbar
-%         subplot(1,2,2); imagesc(filtStim-filtBase); colorbar
-%         title('Stim-Base')
-    heatmap_fig = figure; colormap('jet'); 
-        subplot(1,2,1); imagesc(stimMap); colorbar
-        title('Avg dF/F0 During Stim (Raw)')
-        subplot(1,2,2); imagesc(filtStimMap); colorbar
-        title('Avg dF/F0 During Stim (Filtered)')
-        
-        tempDir = pwd;
-        heatmap_figName = ['heatmap_' tempDir(strfind(tempDir,'TSer'):end)]; 
-        saveas(heatmap_fig,heatmap_figName,'fig');
-
-    %
     %% Save data to a file containing the Tseries name
     currentDirectory = pwd;
     TseriesLoc = strfind(currentDirectory, 'TSeries-');
@@ -310,11 +242,6 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
         saveDirectory = strcat(prefixDirectory, '/Data_Analysis/', ...
             savePath);
 
-    end
-    
-    if useROI == 1 % if using ROI setting
-        roiName = input('Input name for ROI: ','s');
-        saveDirectory = [saveDirectory roiName];
     end
     
     if ~isdir(saveDirectory)

@@ -1,4 +1,4 @@
-
+%Katie Shakman 
 %% Fluorescence Analysis
 % Code to process GCaMP calcium imaging Tseries (from 2-photon).
 % What it does/will do:

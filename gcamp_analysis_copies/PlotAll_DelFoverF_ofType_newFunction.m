@@ -1,9 +1,7 @@
 %% Plot Only Fluor Analysis
 % Plot from previously stored deltaF/F data and timepoints. 
 % clear all; close all;
-
-function [] = PlotAll_DelFoverF_ofType_func()
-
+function PlotAll_DelFoverF_ofType_newFunction()
 StartDir = pwd; 
 
 % Variables user can change: 
@@ -12,6 +10,7 @@ x_limits = [2,7];
 %% Load data files from several user-selected directories. 
 imDir = uigetdir(); % Allow user to select directory. 
 cd(imDir);
+
 currentDirectory = pwd; % For use in save paths. 
 
 all_delFoverF_files = dir('*delFoverF.mat');
@@ -144,7 +143,6 @@ title('deltaF/F vs Time')
 % text(3, delFoverF(3),'\leftarrow (delFoverF(3sec))',...
 %      'HorizontalAlignment','left')
 % title('GCaMP Average vs Time')
-
 % % Add a line at timepoint = 3 sec
     yvals = get(gca, 'ylim');
     max_y_vals = yvals
@@ -155,7 +153,6 @@ title('deltaF/F vs Time')
     set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
     set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
 hold off
-
 % Also plot the mean of each column (timePt):
 
 subplot(1,2,2);
@@ -195,6 +192,9 @@ hold off
 set(gca,'xlim', x_limits);
 
 %% Save figure files and evokedAvg value
+
+cd('..'); % one directory up before saving.
+
 dateStart = strfind(imDir, '201'); 
 dateEnd = dateStart-1 + min(strfind(imDir(dateStart:end), '/'))-1; 
 date = imDir(dateStart:dateEnd);
@@ -219,12 +219,18 @@ for i = 1:length(timePoints)
 end
 
 % convert currentDirectory to currentDirName
-currentDirName = strrep(currentDirectory, '/', '_')  % Print to console.
+currentDirName = strrep(currentDirectory, '/', '_')  % Print to console. 
 
 evokedAvg = mean(evokedResp); 
 evokedAvg_savefile = [figName, '_evokedAvg']; 
 save(evokedAvg_savefile, 'evokedAvg'); 
 load(evokedAvg_savefile); 
+% Added 3/2/2016:
+filename = evokedAvg_savefile; 
+txt = fopen(filename,'w')
+fprintf(txt, '...\n' , 'evokedAvg');
+fclose(txt);
+% End 3/2/2016 Addition. 
 %
 evokedPeak = max(evokedResp); 
 evokedPeak_savefile = [figName, '_evokedPeak']; 
@@ -277,5 +283,4 @@ save(avg_dfPeak_savefile, 'avgdfPeak');
 % save(fullfile(savepath,evokedAvg_savefile,'evokedAvg'));
 % save(fullfile(savepath,avg_dFoF_savefile,'avg_dFoF'));
 %save(avg_dFoF_savefile, 'avg_dFoF'); 
-
 cd(StartDir); 

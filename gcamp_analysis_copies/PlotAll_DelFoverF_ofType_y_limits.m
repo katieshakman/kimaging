@@ -1,13 +1,12 @@
 %% Plot Only Fluor Analysis
 % Plot from previously stored deltaF/F data and timepoints. 
-% clear all; close all;
-
-function [] = PlotAll_DelFoverF_ofType_func()
+clear all; close all;
 
 StartDir = pwd; 
 
 % Variables user can change: 
 x_limits = [2,7];
+y_limits = [-0.1, 2];
 
 %% Load data files from several user-selected directories. 
 imDir = uigetdir(); % Allow user to select directory. 
