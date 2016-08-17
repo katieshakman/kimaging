@@ -39,17 +39,23 @@ names = folders(1,:); % keep only the folder names
 % names = { '1-oil'   , '2-octCSplus'  ,  '6-aceto'};
 
 % Choose ROI for this analysis batch if desired: 
-chooseROI = 1; % Set to 0 for no ROI choice, or 1 to use the drawROI function. 
-[ROI, roiName] = drawROI(); 
+chooseROI = 0; % Set to 0 for no ROI choice, or 1 to use the drawROI function. 
+if chooseROI == 1
+    [ROI, roiName] = drawROI();
+else
+    ROI = NaN; roiName = [];
+end
 
 try
     tempFolder = names{1,1};
     cd(tempFolder);
     new_FluorAnalysis_batch_withPID_function([ROI, roiName]); 
     cd ..; % go back up a level 
+   
 catch
     display('First folder not analyzed.');
-    cd ..; % go back up a level
+    cd(raw_folder); % go back to starting folder
+    display('Moved back to batch folder.'); 
 end
 
 for nameIdx = 2:length(names)

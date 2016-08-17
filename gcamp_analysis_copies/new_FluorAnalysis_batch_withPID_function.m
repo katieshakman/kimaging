@@ -66,6 +66,8 @@ for TS_idx = 1:length(TS_listing)
             disp('Please draw an ROI on the figure and double-click when done.')
             ROI = roipoly(runningTotIm);
             ROI = uint16(ROI);
+        elseif isnan(ROI); 
+            ROI = uint16(ones(size(avgIm))); % Use entire average image size for ROI if NaN ROI was passed.  
         else
             figure; 
             subplot(1,2,1); imshow(runningTotIm);
