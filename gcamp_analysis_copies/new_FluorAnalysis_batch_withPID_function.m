@@ -1,7 +1,8 @@
-% function newFluorAnalysis_batch_withPID_func(ROI, roiName, rawFolder)
-rawFolder = ...
-'/Users/katieshak/Desktop/Data_Analysis_Temp/Raw_Unprocessed/2015_10_08_testing/br1_58B_6fA/p1_hemi1';
-roiName = 'roiName'; 
+function newFluorAnalysis_batch_withPID_func(ROI, roiName, rawFolder)
+%%% For testing: 
+% rawFolder = ...
+% '/Users/katieshak/Desktop/Data_Analysis_Temp/Raw_Unprocessed/2015_10_08_testing/br1_58B_6fA/p1_hemi1';
+% roiName = 'roiName'; 
 
 %%% Fluorescence Analysis
 % Code to process GCaMP calcium imaging Tseries (from 2-photon).

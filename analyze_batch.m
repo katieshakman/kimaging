@@ -49,7 +49,7 @@ end
 try
     tempFolder = names{1,1};
     cd(tempFolder);
-    new_FluorAnalysis_batch_withPID_function([ROI, roiName],rawFolder); 
+    new_FluorAnalysis_batch_withPID_function([ROI, roiName],raw_folder); 
     cd ..; % go back up a level 
    
 catch
@@ -61,7 +61,7 @@ end
 for nameIdx = 2:length(names)
     tempFolder = names{1,nameIdx};
     cd(tempFolder);
-    new_FluorAnalysis_batch_withPID_function(ROI, roiName,rawFolder);
+    new_FluorAnalysis_batch_withPID_function(ROI, roiName, raw_folder);
     cd ..;
 end
 
