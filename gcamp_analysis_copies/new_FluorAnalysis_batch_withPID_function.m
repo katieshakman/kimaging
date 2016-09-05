@@ -1,4 +1,7 @@
-function newFluorAnalysis_batch_withPID_func(ROI, roiName)
+% function newFluorAnalysis_batch_withPID_func(ROI, roiName, rawFolder)
+rawFolder = ...
+'/Users/katieshak/Desktop/Data_Analysis_Temp/Raw_Unprocessed/2015_10_08_testing/br1_58B_6fA/p1_hemi1';
+roiName = 'roiName'; 
 
 %%% Fluorescence Analysis
 % Code to process GCaMP calcium imaging Tseries (from 2-photon).
@@ -13,33 +16,35 @@ function newFluorAnalysis_batch_withPID_func(ROI, roiName)
 % Ch3 : dodt (transmitted light)
 
 % clear all; close all;
-%%% Option to add ROIs interactively. 
-useROI = 1; % set to 0 for no ROI, or to 1 for one or more ROIs.  
-%%% Option to gather PID data. 
+%%% Option to add ROIs interactively.
+useROI = 1; % set to 0 for no ROI, or to 1 for one or more ROIs.
+%%% Option to gather PID data.
 usePID = 0; % set to 0 for ignoring PID data, or to 1 to get/plot PID data.
 
-%%% Compile list of Tseries directories in current folder.
+%% Set up the folders
 myFolder = pwd;
+analysisFolder = strrep(rawFolder,'Raw_Unprocessed','Data_Analysis') % modifiedStr = strrep(origStr, oldSubstr, newSubstr)
+stimTypeFolder = strrep(myFolder,rawFolder,'')
+
+%% Compile list of Tseries directories in current folder.
 TS_listing = dir('Tseries*');
 if isempty(TS_listing)
-    TS_listing = dir('TSeries*');
+    TS_listing = dir('TSeries*'); % Try again (this sometimes works). 
     if isempty(TS_listing)
         display('No TSeries found in directory.')
     end
 end
 
-%%% Indicate whether to use long format directory name for saving dir.
-LongSavePath = 1;
 
 %%% Read the image (and get an ROI, if desired).
 for TS_idx = 1:length(TS_listing)
-    close all; 
+    close all;
     % clear all variables except myFolder, TS_listing, and TS_idx:
-    clearvars -except myFolder TS_listing TS_idx LongSavePath useROI ROI roiName usePID; 
-%     clear all; close all;
-%     imDir = uigetdir(); % Allow user to specify the directory to read images from.
-    mySubfolder = TS_listing(TS_idx).name; 
-    imDir = fullfile(myFolder, mySubfolder); 
+    clearvars -except myFolder TS_listing TS_idx LongSavePath useROI ROI roiName usePID rawFolder analysisFolder stimTypeFolder;
+    %     clear all; close all;
+    %     imDir = uigetdir(); % Allow user to specify the directory to read images from.
+    mySubfolder = TS_listing(TS_idx).name;
+    imDir = fullfile(myFolder, mySubfolder);
     cd(imDir);
     tifIm = dir('*.tif');
     %im1 = imread(tifIm(1).name); % Below: changed this to the average image for the stack.
@@ -66,23 +71,25 @@ for TS_idx = 1:length(TS_listing)
             disp('Please draw an ROI on the figure and double-click when done.')
             ROI = roipoly(runningTotIm);
             ROI = uint16(ROI);
-        elseif isnan(ROI); 
-            ROI = uint16(ones(size(avgIm))); % Use entire average image size for ROI if NaN ROI was passed.  
+            roiName = 'new';
+        elseif isnan(ROI);
+            ROI = uint16(ones(size(avgIm))); % Use entire average image size for ROI if NaN ROI was passed.
+            roiName = 'full';
         else
-            figure; 
+            figure;
             subplot(1,2,1); imshow(runningTotIm);
             subplot(1,2,2); imshow(ROI.*(runningTotIm));
-            % TODO: Add a dialog to confirm or adjust ROI.  
+            % TODO: Add a dialog to confirm or adjust ROI.
         end
-        % Mask average image with ROI. 
-        avgIm = ROI.*avgIm; 
+        % Mask average image with ROI.
+        avgIm = ROI.*avgIm;
     elseif useROI == 2
-          % load ROI  
+        % load ROI
     else
-        ROI = ones(size(avgIm)); 
+        ROI = ones(size(avgIm));
     end
     
-    % While in imDir, read and save the PID info. 
+    % While in imDir, read and save the PID info.
     if usePID == 1
         PID_list = dir('*.csv');
         [PID_fig, PID_figName] = PID_Plot_func(PID_list(1,1).name);
@@ -197,7 +204,7 @@ for TS_idx = 1:length(TS_listing)
     % tifImCh1_indices = tifImCh1_indices * ones(length(tifImCh1_indices));
     maxTime = length(tifImCh1_indices);
     CaAvgDenom = 512*512; % Total number of pixels per slice.
-     % TODO: Change the above (CaAvgDenom) to get the true image (or ROI) size.
+    % TODO: Change the above (CaAvgDenom) to get the true image (or ROI) size.
     
     for timeIdx = 1:maxTime
         currTif = imread(tifIm(timeIdx).name) ;
@@ -205,7 +212,7 @@ for TS_idx = 1:length(TS_listing)
         if useROI
             currTif = ROI.*currTif;
         end
-        CaAvg(timeIdx) = sum(sum( currTif )) / CaAvgDenom; % Avg Signal in frame normalized to the image size. 
+        CaAvg(timeIdx) = sum(sum( currTif )) / CaAvgDenom; % Avg Signal in frame normalized to the image size.
     end
     timePt3sec = 3/framePerVal; % 3sec*(1/(sec/frame)) = 3sec/framePerVal
     if timePt3sec < 1 || isnan(framePerVal)
@@ -225,59 +232,37 @@ for TS_idx = 1:length(TS_listing)
     % time = 4sec)
     timePt5sec = 5/framePerVal; % to get frame # at which time is 4 sec
     sec5TifIm = imread(tifIm(ceil(timePt5sec)).name);
-    % Get average baseline image: 
+    % Get average baseline image:
     % get baseline image, then divide by that image (so each point in image is converted
-    % to its own delF/F0 value). 
+    % to its own delF/F0 value).
     baseImSum = im2double(imread(tifIm(1).name)); % Inialize to first image.
     for imIdx=2:ceil(timePt3sec) % Read in baseline images.
         tempIm = imread(tifIm(imIdx).name);
         baseImSum = baseImSum + im2double(tempIm);
     end
     meanBaseIm = baseImSum/ceil(timePt3sec);
-    clear tempIm; 
-    % Get average stimulus image: 
+    clear tempIm;
+    % Get average stimulus image:
     stimImSum = im2double(imread(tifIm(ceil(timePt3sec)).name)); % Inialize to first stim image.
-    for imIdx = 2:ceil(timePt5sec); % Read in stimulus images. 
-        tempIm = imread(tifIm(imIdx).name); 
+    for imIdx = 2:ceil(timePt5sec); % Read in stimulus images.
+        tempIm = imread(tifIm(imIdx).name);
         stimImSum = stimImSum + im2double(tempIm);
     end
     meanStimIm = stimImSum/(ceil(timePt5sec)-ceil(timePt3sec));
-    stimMap = (meanStimIm-meanBaseIm)./meanBaseIm; 
-     filtBase = imgaussfilt(meanBaseIm, 2);
-     filtStim = imgaussfilt(meanStimIm, 2);
-     filtStimMap = (filtStim-filtBase)./filtBase;
-   
-%     close all; % close all other figures -- use only if testing
-%     figure; colormap('hot');
-%         subplot(1,2,1); imagesc(meanBaseIm); colorbar
-%         subplot(1,2,2); imagesc(filtBase); colorbar
-%         title('Baseline')
-%     figure; colormap('hot'); 
-%         subplot(1,2,1); imagesc(meanStimIm); colorbar
-%         subplot(1,2,2); imagesc(filtStim); colorbar
-%         title('Stimulation')
-%     figure; colormap('hot'); 
-%         subplot(1,2,1); imagesc(meanStimIm-meanBaseIm); colorbar
-%         subplot(1,2,2); imagesc(filtStim-filtBase); colorbar
-%         title('Stim-Base')
-    heatmap_fig = figure; colormap('jet'); 
-        subplot(1,2,1); imagesc(stimMap); colorbar
-        title('Avg dF/F0 During Stim (Raw)')
-        subplot(1,2,2); imagesc(filtStimMap); colorbar
-        title('Avg dF/F0 During Stim (Filtered)')
-        
-        tempDir = pwd;
-        heatmap_figName = ['heatmap_' tempDir(strfind(tempDir,'TSer'):end)]; 
-        saveas(heatmap_fig,heatmap_figName,'fig');
-
-    %
-%     for timeIdx = 1:maxTime
-%         delF(timeIdx) = CaAvg(timeIdx) - F_0;
-%         delFoverF(timeIdx) = delF(timeIdx)/F_0;
-%     end
-%     timePoints = [ 1:maxTime ] .* framePerVal;
-%     % Above: time is in sec, framePerVal is in sec/frame --> divide by framePer
-%     % allTimePoints = [framePerVal:maxTime];
+    stimMap = (meanStimIm-meanBaseIm)./meanBaseIm;
+    filtBase = imgaussfilt(meanBaseIm, 2);
+    filtStim = imgaussfilt(meanStimIm, 2);
+    filtStimMap = (filtStim-filtBase)./filtBase;
+    
+    heatmap_fig = figure; colormap('jet');
+    subplot(1,2,1); imagesc(stimMap); colorbar
+    title('Avg dF/F0 During Stim (Raw)')
+    subplot(1,2,2); imagesc(filtStimMap); colorbar
+    title('Avg dF/F0 During Stim (Filtered)')
+    
+    tempDir = pwd;
+    heatmap_figName = ['heatmap_' tempDir(strfind(tempDir,'TSer'):end)];
+    saveas(heatmap_fig,heatmap_figName,'fig');
     
     %%% Save data to a file containing the Tseries name
     currentDirectory = pwd;
@@ -299,6 +284,7 @@ for TS_idx = 1:length(TS_listing)
         end
     end
     
+    % Get trial type:
     if strcmp(parentDir(end-2:end), 'INE')
         trialType = strcat('_', 'PRE-EXPT_BASELINE');
     elseif strcmp(parentDir(end-2:end), 'T5V')
@@ -308,39 +294,29 @@ for TS_idx = 1:length(TS_listing)
     else
         trialType = strcat('_', parentDir(end-2:end));
     end
-    % timePoints_FileName = strcat(currentDirectory(TseriesLoc:end), currFolderName, '_timePoints');
     
-    % timePoints_FileName = [currentDirectory(TseriesLoc:end) trialType '_' 'timePoints'];
     timePoints_FileName = strcat(currentDirectory(TseriesLoc:end), trialType, '_timePoints');
     
     delFoverF_FileName = strcat(currentDirectory(TseriesLoc:end), trialType, '_delFoverF');
     
     baselineF0_FileName = strcat(currentDirectory(TseriesLoc:end), trialType, '_baselineF0');
     
-    suffixDirectory = currentDirectory(...
-        strfind(currentDirectory, 'Raw_Un')+16:...
-        strfind(currentDirectory, 'lobe')+5);
-    prefixDirectory = currentDirectory(...
-        1:strfind(currentDirectory, 'Raw_Un')-2);
-    % % New: Save copy of each variable in the user-specified folder:
-    % saveDirectory = uigetfolder();
-    if LongSavePath == 0
-        saveDirectory = strcat(prefixDirectory, '/Data_Analysis/', ...
-            suffixDirectory, saveName);
-    else
-        savePath = currentDirectory(...
-            strfind(currentDirectory, 'Raw_Un')+16:strfind(...
-            currentDirectory, 'eries')-4);
-        saveDirectory = strcat(prefixDirectory, '/Data_Analysis/', ...
-            savePath);
-        
-    end
     
+    %% Save copy of each variable in the specified folder:
+%     savePath = currentDirectory(...
+%         strfind(currentDirectory, 'Raw_Un')+16:strfind(...
+%         currentDirectory, 'eries')-4);
+%     saveDirectory = strcat(prefixDirectory, '/Data_Analysis/', ...
+%         savePath);  
+
     if useROI == 1 % if using ROI setting
-        %         roiName = input('Input name for ROI: ','s');
-        disp('ROI name is: '); disp(roiName); 
+        disp('ROI name is: '); disp(roiName);
         
-        saveDirectory = [saveDirectory roiName];
+        roiSaveFolder = strcat(analysisFolder,'_',roiName,stimTypeFolder);
+        saveDirectory = roiSaveFolder;
+        disp('saveDirectory is: '); disp(saveDirectory);
+    else
+        saveDirectory = strcat(analysisFolder,stimTypeFolder);
     end
     
     if ~isdir(saveDirectory)
@@ -349,9 +325,7 @@ for TS_idx = 1:length(TS_listing)
     cd(saveDirectory);
     
     save(timePoints_FileName, 'timePoints');
-    
     save(delFoverF_FileName, 'delFoverF');
-    
     save(baselineF0_FileName, 'F_0'); % Save the baseline (F_0)!
     
     if usePID == 1
@@ -359,6 +333,7 @@ for TS_idx = 1:length(TS_listing)
     end
     
     cd(currentDirectory);
+    
     % % % Previously: Save a copy of each variable in the containing folder:
     % cd(parentDir)
     % save(timePoints_FileName, 'timePoints');
@@ -445,5 +420,4 @@ for TS_idx = 1:length(TS_listing)
     cd ../
     display('new_FluorAnalysis_batch completed');
 end
-
 
