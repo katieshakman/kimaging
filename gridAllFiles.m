@@ -19,24 +19,25 @@ clear all; close all;
 % odorDirs = {'1-oil', '2-Oct', '3-MCH','4-Far', '5-IpA', '6-HAc','7-Ben'};
 % odorNames = {'oil', 'Oct', 'MCH','Far','IPA', 'HAC', 'Ben'};
 % odorDirs = {'2-OctV1', '3-MCHV1','4-FarV1', '5-IpAV1', '6-HAcV1','7-BenV1'};
-odorDirs = {'2-OctMV1', '3-MCHMV1','4-FarMV1', '5-IpAMV1', '6-HAcMV1','7-BenMV1'};
-odorNames = {'Oct', 'MCH','Far','IPA', 'HAC', 'Ben'};
+odorDirs = {'2-Octv1','4-Farv1', '5-IpAv1', '6-HAcv1','7-Benv1'};
+odorDirs2 = {'2-Oct','4-Far', '5-IpA', '6-HAc','7-Ben'};
+odorNames = {'Oct','Far','IPA', 'HAC', 'Ben'};
 
 numOdors = length(odorNames);
 StartDir = pwd;
 % addpath(genpath(StartDir));
 yaxmin = -0.1; % -0.5 normally
 yaxmax = 0.9; % 1.25 normally
-xaxmin = 2; % 0;
-xaxmax = 6; % 8;
+xaxmin = 0; % 0;
+xaxmax = 10; % 8;
 odorOn = 3;
 odorOff = 5;
 % note: user should also specify a file with the directories for each
 % fly/hemi in that fly from which the user wants data imported.
-% cd('/Users/katieshak/Desktop/Data_Analysis_Temp');
-cd('/Volumes/KATIELAB1/FliesToAnalyze');% user specifies this folder
+cd('/Users/katieshak/Desktop/Data_Analysis_Temp');
+% cd('/Volumes/KATIELAB1/FliesToAnalyze');% user specifies this folder
 % groupFileString = 'DirsForImport_sorted_V1_vinegar_oct.txt';
-groupFileString = 'DirsForImport_MV1.txt' ;% user specifies this file 
+groupFileString = 'DirsForImport_V1.txt' ;% user specifies this file 
 
 fileID = fopen(groupFileString);
 flyDirList = textscan(fileID,'%s');
@@ -45,7 +46,7 @@ flyDirList;
 cd(StartDir)
 numFlies = length(flyDirList{1,1});
 % add-ons for plotting etc.:
-addpath('/Users/katieshak/Documents/MATLAB/Extensions'); % contains subtitle.m
+% addpath('/Users/katieshak/Documents/MATLAB/Extensions'); % contains subtitle.m
 
 %% make empty figure:
 gfig = figure;
@@ -81,7 +82,13 @@ for flyIdx = 1:numFlies
         %         odorDir = uigetdir(); % for manually choosing odor dirs
         odorDir = odorDirs{odorIdx};
         try
-            cd(odorDir);
+            try
+                cd(odorDir);
+            catch
+                display('Odor directory not found, trying shorter version of folder name.');
+                odorDir = odorDirs2{odorIdx};
+                cd(odorDir)
+            end
             % get time points
             tPtsFiles = dir('*timePoints.mat');
             tPtsDat = load(tPtsFiles(1).name);
@@ -113,12 +120,11 @@ for flyIdx = 1:numFlies
             set(lineOn,'Color',[0.5 0.5 0.5],'LineWidth', 1, 'LineStyle','-.')
             set(lineOff,'Color',[0.5 0.5 0.5],'LineWidth', 1, 'LineStyle','-.')
             subtitle(groupFileString(15:end-4));
-
-            
         catch
             display('Odor directory not found.');
             plot(NaN);
-%             tempTraces = nan(size(tempTraces)); % use length of last tempTrace 
+            %             tempTraces = nan(size(tempTraces)); % use length of last tempTrace
+            
         end
         display('movin back up');
         cd('..'); % back up one level
