@@ -8,6 +8,8 @@ StartDir = pwd;
 
 % Variables user can change: 
 x_limits = [2,7];
+onTime = 3; % time of odor onset
+offTime = 5; % time of odor offset
 
 %% Load data files from several user-selected directories. 
 % imDir = uigetdir(); % Allow user to select directory. 
@@ -82,12 +84,21 @@ if size(tPts,1) > 1
 end
 
 % Calculate area under curve for each trial, starting at time 3s.
+% Get index of odor onset frame: 
 for idx = 1:length(tPts)
-    if ~(tPts(1,idx) <3)
+    if ~(tPts(1,idx) <onTime)
         onIdx = idx;
         break;
     end
 end
+% Get index of odor offset frame: 
+for idx = onIdx:length(tPts)
+    if (tPts(1,idx) > offTime)
+        offIdx = idx;
+        break;
+    end
+end
+
 % postOnset = []; % init
 AOCsum = nan(size(all_baseline_files));
 Atrapz = nan(size(all_baseline_files));
@@ -97,10 +108,12 @@ for trial =1:size(tPts,1)
         postOnset = nan(size(dFoF,1),size(dFoF,2)+1-onIdx);
     end
     temp = dFoF(trial,onIdx:end);
+    odorONdFoF = dFoF(trial,onIdx:offIdx);
 %     postOnset = [temp; postOnset];
     postOnset(trial,:) = temp;
     AOCsum(trial) = sum(postOnset(trial,:)); 
     Atrapz(trial) = trapz(postOnset(trial,:));
+    AOdortrapz(trial) = trapz(odorONdFoF); % between timeOn and timeOff
     dfPeak(trial) = max(dFoF(trial,:)); % peak in entire trial    
 end
 %% Plot GCaMP (for each trial and on average) versus time. 
@@ -120,7 +133,7 @@ for idx = 1:max(size(dFoF, 1))
     %
     ind = 0; 
     for i = 1:length(timePoints)
-        if (timePoints(i) > 3) && (timePoints(i) < 5)
+        if (timePoints(i) > onTime) && (timePoints(i) < offTime)
             ind = ind +1;
             evokedTrialSums(idx) = evokedTrialSums(idx) + dFoF(idx, i); 
             denom = ind; 
@@ -260,6 +273,13 @@ save(avg_dFoF_savefile, 'avg_dFoF');
 Atrapz_savefile = [figName, 'AOC_trapz'];
 cd('..'); % up one level
 save(Atrapz_savefile, 'Atrapz');
+
+OdorAtrapz_savefile = [figName, 'AOdortrapz'];
+save(OdorAtrapz_savefile, 'AOdortrapz');
+
+avgAOdortrapz = mean(AOdortrapz); 
+avg_OdorAtrapz_savefile = [figName, 'avg_AOCOdor_trapz'];
+save(avg_OdorAtrapz_savefile, 'avgAOdortrapz');
 
 avgAtrapz = mean(Atrapz); 
 avg_Atrapz_savefile = [figName, 'avg_AOC_trapz'];
