@@ -42,11 +42,9 @@ names = folders(1,:); % keep only the folder names
 % names = { '1-oil'   , '2-octCSplus'  ,  '6-aceto'};
 
 % Choose ROI for this analysis batch if desired: 
-<<<<<<< HEAD
- 
-=======
+
 chooseROI = 1; % Set to 0 for no ROI choice, or 1 to use the drawROI function. 
->>>>>>> a19bfc0f32871c96b0b452be9bf63eda21c2bc04
+
 if chooseROI == 1
     [ROI, roiName] = drawROI();
 else
@@ -56,7 +54,7 @@ end
 try
     tempFolder = names{1,1};
     cd(tempFolder);
-    new_FluorAnalysis_batch_withPID_function([ROI, roiName],raw_folder); 
+    new_FluorAnalysis_batch_withPID_function(ROI, roiName,raw_folder); 
     cd ..; % go back up a level 
    
 catch
