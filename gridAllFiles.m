@@ -4,6 +4,7 @@
 % clean up workspace
 clear all; close all;
 % addpath(genpath('/Users/katieshak/Desktop/Data_Analysis_Temp'));
+% addpath(genpath('/Volumes/KATIELAB1/Data_Analysis')); 
 %% adjustable parameters:
 % odorDirs = {'1-oil','2-Oct','4-Vin', '5-OctVin', '6-H2O'};
 % odorNames = {'Oil', 'Oct', 'Vin', 'OctVin', 'H2O'};
@@ -19,25 +20,49 @@ clear all; close all;
 % odorDirs = {'1-oil', '2-Oct', '3-MCH','4-Far', '5-IpA', '6-HAc','7-Ben'};
 % odorNames = {'oil', 'Oct', 'MCH','Far','IPA', 'HAC', 'Ben'};
 % odorDirs = {'2-OctV1', '3-MCHV1','4-FarV1', '5-IpAV1', '6-HAcV1','7-BenV1'};
+<<<<<<< HEAD
+% odorDirs = {'2-OctMV1', '3-MCHMV1','4-FarMV1', '5-IpAMV1', '6-HAcMV1','7-BenMV1'};
+% odorNames = {'Oct', 'MCH','Far','IPA', 'HAC', 'Ben'};
+% odorDirs = {'2-OctMV1','4-FarMV1', '5-IpAMV1', '6-HAcMV1','7-BenMV1'};
+odorDirs = {'2-Oct','4-Far', '5-IpA', '6-HAc','7-Ben'}; % {'2-OctV1','4-FarV1', '5-IpAV1', '6-HAcV1','7-BenV1'};
+% odorDirs2 = {'2-Oct','4-Far', '5-IpA', '6-HAc','7-Ben'};
+odorNames = {'Oct','Far','IPA', 'HAC', 'Ben'};
+% odorDirs = {'1-oil','5-IpA'};
+% odorNames = {'Oil','IPA'};
+=======
 odorDirs = {'2-Octv1','4-Farv1', '5-IpAv1', '6-HAcv1','7-Benv1'};
 odorDirs2 = {'2-Oct','4-Far', '5-IpA', '6-HAc','7-Ben'};
 odorNames = {'Oct','Far','IPA', 'HAC', 'Ben'};
+>>>>>>> a19bfc0f32871c96b0b452be9bf63eda21c2bc04
 
 numOdors = length(odorNames);
 StartDir = pwd;
 % addpath(genpath(StartDir));
 yaxmin = -0.1; % -0.5 normally
+<<<<<<< HEAD
+yaxmax = 0.55; % 1.25 normally
+=======
 yaxmax = 0.9; % 1.25 normally
+>>>>>>> a19bfc0f32871c96b0b452be9bf63eda21c2bc04
 xaxmin = 0; % 0;
 xaxmax = 10; % 8;
 odorOn = 3;
 odorOff = 5;
 % note: user should also specify a file with the directories for each
 % fly/hemi in that fly from which the user wants data imported.
+<<<<<<< HEAD
+% cd('/Users/katieshak/Desktop/Data_Analysis_Temp');
+cd('/Volumes/KATIELAB1/FliesToAnalyze');% user specifies this folder
+% groupFileString = 'DirsForImport_MV1.txt';
+groupFileString = 'DirsForImport_KC-TeT_71D08L-6f.txt';
+% groupFileString = 'MBONs_71D08LexA.txt' ;% user specifies this file 
+% groupFileString = 'OilVSiPA.txt';
+=======
 cd('/Users/katieshak/Desktop/Data_Analysis_Temp');
 % cd('/Volumes/KATIELAB1/FliesToAnalyze');% user specifies this folder
 % groupFileString = 'DirsForImport_sorted_V1_vinegar_oct.txt';
 groupFileString = 'DirsForImport_V1.txt' ;% user specifies this file 
+>>>>>>> a19bfc0f32871c96b0b452be9bf63eda21c2bc04
 
 fileID = fopen(groupFileString);
 flyDirList = textscan(fileID,'%s');

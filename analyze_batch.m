@@ -4,10 +4,12 @@
 % in folders by odor).
 
 % add necessary dirs to search path: 
-% addpath('/Users/katieshak/code/kimaging/gcamp_analysis_copies') 
+% addpath('/Users/katieshak/code/kimaging/gcamp_analysis_copies')
+% %forLaptop
 % OR
 % addpath(genpath('/Users/katherineshakman/code/kimaging/gcamp_analysis_copies'))
-
+% % foriMacDesktop
+% 
 % May also need to add the folders where the data will be, e.g.:
 % addpath(genpath('/Volumes/KATIELAB1/Raw_Unprocessed/'))
 % addpath(genpath('/Volumes/KATIELAB1/Data_Analysis/'))
@@ -22,6 +24,7 @@ function [] = analyze_batch(raw_folder)
 
 % To prespecify starting folder:
 %raw_folder = '/Users/katieshak/Desktop/Data_Analysis_Temp/Raw_Unprocessed/2015_10_21_Live/br1_58B_6fA/p1_hemi1_left';
+chooseROI = 0; % Set to 0 for no ROI choice, or 1 to use the drawROI function.
 
 % % To let user load starting folder:
 % raw_folder = uigetdir('','Select raw data folder');
@@ -39,7 +42,11 @@ names = folders(1,:); % keep only the folder names
 % names = { '1-oil'   , '2-octCSplus'  ,  '6-aceto'};
 
 % Choose ROI for this analysis batch if desired: 
+<<<<<<< HEAD
+ 
+=======
 chooseROI = 1; % Set to 0 for no ROI choice, or 1 to use the drawROI function. 
+>>>>>>> a19bfc0f32871c96b0b452be9bf63eda21c2bc04
 if chooseROI == 1
     [ROI, roiName] = drawROI();
 else
