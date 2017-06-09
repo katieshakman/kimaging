@@ -31,8 +31,8 @@ getAllChAvg = 1;
     
     % Make ROI:
     fig = figure; 
-    disp('Please draw an ROI on the figure and double-click on figure when done.')
-    imShown = imshow(runningTotIm,'DisplayRange',DispRange); 
+    imShown = imshow(runningTotIm,'DisplayRange',DispRange);
+    disp('Please draw an ROI on the figure and double-click on figure when done.') 
     ROI = roipoly;
     ROI = uint16(ROI);
     close;

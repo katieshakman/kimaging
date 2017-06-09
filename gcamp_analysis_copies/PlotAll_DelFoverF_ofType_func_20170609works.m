@@ -1,16 +1,15 @@
-%% Plot Only Fluor Analysis with Z-score
+%% Plot Only Fluor Analysis
 % Plot from previously stored deltaF/F data and timepoints. 
-clear; close all;
+% clear all; close all;
 
-%function [] = PlotAll_DelFoverF_ofType_zScore()
+function [] = PlotAll_DelFoverF_ofType_func(imDir)
 
 StartDir = pwd; 
 
 % Variables user can change: 
-x_limits = [0,10];
-y_line_limits = [-1,2];
-END_BASELINE = 3; 
-END_ODOR = 5; 
+x_limits = [2,7];
+onTime = 3; % time of odor onset
+offTime = 5; % time of odor offset
 
 %% Load data files from several user-selected directories. 
 % imDir = uigetdir(); % Allow user to select directory. 
@@ -77,7 +76,6 @@ end
 clear idx; 
 clear pattern;
 
-%% Check data and Calc z-scores 
 % Assert that all trials being plotted together were acquired with the same
 % time points (same number of frames and length of period).
 if size(tPts,1) > 1
@@ -86,42 +84,38 @@ if size(tPts,1) > 1
 end
 
 % Calculate area under curve for each trial, starting at time 3s.
+% Get index of odor onset frame: 
 for idx = 1:length(tPts)
-    if ~(tPts(1,idx) <END_BASELINE)
+    if ~(tPts(1,idx) <onTime)
         onIdx = idx;
         break;
     end
 end
+% Get index of odor offset frame: 
+for idx = onIdx:length(tPts)
+    if (tPts(1,idx) > offTime)
+        offIdx = idx;
+        break;
+    end
+end
+
 % postOnset = []; % init
 AOCsum = nan(size(all_baseline_files));
 Atrapz = nan(size(all_baseline_files));
 dfPeak = nan(size(all_baseline_files)); % peak of each trial
-% raw = []; % init
 for trial =1:size(tPts,1)
-    assert(size(tPts,1) < size(tPts,2)); % if fails, probably have huge num trials or too few frames 
     if trial == 1
         postOnset = nan(size(dFoF,1),size(dFoF,2)+1-onIdx);
     end
     temp = dFoF(trial,onIdx:end);
+    odorONdFoF = dFoF(trial,onIdx:offIdx);
 %     postOnset = [temp; postOnset];
     postOnset(trial,:) = temp;
     AOCsum(trial) = sum(postOnset(trial,:)); 
     Atrapz(trial) = trapz(postOnset(trial,:));
-    dfPeak(trial) = max(dFoF(trial,:)); % peak in entire trial 
-    % Get back the raw traces: 
-    raw(trial,:) = (dFoF(trial,:)+1)*F0s(trial); 
-    % Get mean and sigma during baseline (pre-stimulus) for the trace: 
-    preOdorInd = timePoints<END_BASELINE; % gets recalculated each trial
-    preOdorRaw = raw( trial,preOdorInd ); % gets recalculated each trial
-    raw_preOdor_mean(trial) = mean(preOdorRaw); % single value each trial
-    raw_preOdor_sigma(trial) = std(preOdorRaw); % single value each trial
-    % Get zscores for each trace: 
-    zscores(trial,:) = ( raw(trial,:)-raw_preOdor_mean(trial) )/raw_preOdor_sigma(trial) ; 
-    
+    AOdortrapz(trial) = trapz(odorONdFoF); % between timeOn and timeOff
+    dfPeak(trial) = max(dFoF(trial,:)); % peak in entire trial    
 end
-
-
-
 %% Plot GCaMP (for each trial and on average) versus time. 
 % framePeriod = 0.818748; % Frame period : seconds/frame. 
 % framePeriod fetched automatically from config file, stored as framePerVal. 
@@ -139,7 +133,7 @@ for idx = 1:max(size(dFoF, 1))
     %
     ind = 0; 
     for i = 1:length(timePoints)
-        if (timePoints(i) > 3) && (timePoints(i) < 5)
+        if (timePoints(i) > onTime) && (timePoints(i) < offTime)
             ind = ind +1;
             evokedTrialSums(idx) = evokedTrialSums(idx) + dFoF(idx, i); 
             denom = ind; 
@@ -173,18 +167,12 @@ title('deltaF/F vs Time')
     yvals = get(gca, 'ylim');
     max_y_vals = yvals
     
-    try
-        lineOn = plot(xvalsOn, y_line_limits);
-        lineOff = plot(xvalsOff, y_line_limits);
-    catch
-        lineOn = plot(xvalsOn, yvals);
-        lineOff = plot(xvalsOff, yvals);
-    end
+    lineOn = plot(xvalsOn, yvals);
+    lineOff = plot(xvalsOff, yvals);
     % Make the new vertical line at 3s a dash-dotted black line. 
     set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
     set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
 hold off
-ylim(max_y_vals); % rescale the y-axis in case the vertical lines are too tall relative to traces
 
 % Also plot the mean of each column (timePt):
 
@@ -199,10 +187,22 @@ title('Average deltaF/F vs Time')
 % % % text(3, delFoverF(3),'\leftarrow (delFoverF(3sec))',...
 % % %      'HorizontalAlignment','left');
 
+% % % Add max and min curves.
+% % maxCurve = plot(tPts(1,:), max_dFoF);
+% % set(maxCurve, 'Color', 'blue', 'LineWidth', 1, 'LineStyle', '--');
+% % minCurve = plot(tPts(1,:), min_dFoF);
+% % set(minCurve, 'Color', 'blue', 'LineWidth', 1, 'LineStyle', '--');
+%
+% How to fill in space between curves (not working properly):
+% curveDiffVec = [min_dFoF, max_dFoF];
+% xCurve = [timePoints,timePoints];
+% fill(xCurve, curveDiffVec, 'b'); % In the style of: http://www.mathworks.com/matlabcentral/answers/14005
 % Add a line at timepoint = 3 sec
     set(gca, 'ylim', max_y_vals);
     yvals = get(gca, 'ylim');
+%     xvalsOn = [3,3];
     lineOn = plot(xvalsOn, yvals);
+%     xvalsOff = [4,4];
     lineOff = plot(xvalsOff, yvals);
     % Make the new vertical line at 3s a dash-dotted black line. 
     set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
@@ -211,131 +211,6 @@ title('Average deltaF/F vs Time')
     %legend
 hold off
 set(gca,'xlim', x_limits);
-
-%% Plot z-scores(for each trial) versus time. 
-zfig = figure;
-xvalsOn = [3,3];
-xvalsOff = [5,5];
-% subplot(1,2,1); % trial-by-trial plotting. 
-hold all
-evokedTrialZSums = zeros(size(zscores, 1),1); % initialize 
-for idx = 1:max(size(dFoF, 1))
-    plot(tPts(1,:), zscores(idx,:));
-    %
-    ind = 0; 
-    for i = 1:length(timePoints)
-        if (timePoints(i) > END_BASELINE) && (timePoints(i) < END_ODOR)
-            ind = ind +1; % counting frames during stimulus
-            evokedTrialZSums(idx) = evokedTrialZSums(idx) + zscores(idx, i); 
-            denom = ind; 
-        end
-    end
-end
-set(gca,'xlim', x_limits); % set limits of x axis
-
-evokedTrialZAvgs = evokedTrialZSums/denom; 
-
-legend(stringsList) % "creates a legend in the current axes and uses the entries in strings to label each set of data. Specify strings as either a cell array of strings or a matrix of strings."
-% mean(A,1) is a row vector containing the mean value of each column.
-avg_dFoF = mean(dFoF,1);
-max_dFoF = max(dFoF);
-min_dFoF = min(dFoF);
-
-title('z-score vs Time (mean and sd calculated during baseline period)')
-% Annotate the point (3, delFoverF(3))
-% text(3, delFoverF(3),'\leftarrow (delFoverF(3sec))',...
-%      'HorizontalAlignment','left')
-% title('GCaMP Average vs Time')
-
-% % Add a line at timepoint = 3 sec
-    yvals = get(gca, 'ylim');
-    max_y_vals = yvals
-    
-    try
-        lineOn = plot(xvalsOn, max_y_vals);
-        lineOff = plot(xvalsOff, max_y_vals);
-    catch
-        lineOn = plot(xvalsOn, yvals);
-        lineOff = plot(xvalsOff, yvals);
-    end
-    % Make the new vertical line at 3s a dash-dotted black line. 
-    set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
-    set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
-hold off
-ylim(max_y_vals); % rescale the y-axis in case the vertical lines are too tall relative to traces
-
-% Also plot the mean of each column (timePt):
-
-% subplot(1,2,2);
-% avgplot = plot(tPts, avg_zscores);
-% set(avgplot, 'Color', 'blue', 'LineWidth', 1)
-% 
-% hold on
-% title('Average deltaF/F vs Time')
-
-% % Add a line at timepoint = 3 sec
-%     set(gca, 'ylim', max_y_vals);
-%     yvals = get(gca, 'ylim');
-%     lineOn = plot(xvalsOn, yvals);
-%     lineOff = plot(xvalsOff, yvals);
-%     % Make the new vertical line at 3s a dash-dotted black line. 
-%     set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
-%      % Make the new vertical line at 4s a dash-dotted black line.
-%     set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
-%     %legend
-% hold off
-% set(gca,'xlim', x_limits);
-
-%% Make a single figure with the mean and SEM error bars for all the traces in this group/folder:
-avgdfEachTimepoint = mean(dFoF,1); 
-ntrials = size(dFoF,1); 
-SDdfEachTimepoint = std(dFoF,1);
-SEMdfEachTimepoint = SDdfEachTimepoint./sqrt(ntrials); 
-figure; 
-plot(timePoints,avgdfEachTimepoint);
-hold on
-errorbar(timePoints,avgdfEachTimepoint,SEMdfEachTimepoint); 
-hold off
-%% Make a single-panel figure with the lines and the average superimposed in black line: 
-newFig = figure;
-new_evokedTrialSums = zeros(size(dFoF, 1),1); % initialize 
-hold on
-for idx = 1:max(size(dFoF, 1))
-    plot(tPts(1,:), dFoF(idx,:));
-    ind = 0; 
-    for i = 1:length(timePoints)
-        if (timePoints(i) > 3) && (timePoints(i) < 5)
-            ind = ind +1;
-            new_evokedTrialSums(idx) = new_evokedTrialSums(idx) + dFoF(idx, i); 
-            denom = ind; 
-        end
-    end
-end
-% set limits of x axis
-set(gca,'xlim', x_limits);
-    yvals = get(gca, 'ylim');    
-    max_y_vals = yvals
-    lineOn = plot(xvalsOn, y_line_limits);
-    lineOff = plot(xvalsOff, y_line_limits);
-    set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')    % Make the new vertical line at 3s a dash-dotted black line. 
-    set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
-ylim(max_y_vals); % rescale the y-axis in case the vertical lines are too tall relative to traces
-avg_dFoF_plot = plot(tPts, avg_dFoF);
-hold off
-xlabel('Seconds'); ylabel('dF/F');
-
-a=findobj(gcf); % get the handles associated with the current figure
-
-allaxes=findall(a,'Type','axes');
-alllines=findall(a,'Type','line');
-alltext=findall(a,'Type','text');
-
-set(allaxes,'FontName','Arial','FontWeight','Bold','LineWidth',2,...
-    'FontSize',14);
-set(alllines,'Linewidth',4);
-set(alltext,'FontName','Arial','FontWeight','Bold','FontSize',14);
-% info on setting all axes, lines, and text properties from: http://matlab.cheme.cmu.edu/2011/08/01/plot-customizations-modifying-line-text-and-figure-properties/
-set(avg_dFoF_plot, 'Color', 'black', 'LineWidth', 5)
 
 %% Save figure files and evokedAvg value
 dateStart = strfind(imDir, '201'); 
@@ -399,6 +274,13 @@ Atrapz_savefile = [figName, 'AOC_trapz'];
 cd('..'); % up one level
 save(Atrapz_savefile, 'Atrapz');
 
+OdorAtrapz_savefile = [figName, 'AOdortrapz'];
+save(OdorAtrapz_savefile, 'AOdortrapz');
+
+avgAOdortrapz = mean(AOdortrapz); 
+avg_OdorAtrapz_savefile = [figName, 'avg_AOCOdor_trapz'];
+save(avg_OdorAtrapz_savefile, 'avgAOdortrapz');
+
 avgAtrapz = mean(Atrapz); 
 avg_Atrapz_savefile = [figName, 'avg_AOC_trapz'];
 save(avg_Atrapz_savefile, 'avgAtrapz');
@@ -410,8 +292,6 @@ save(dfPeak_savefile, 'dfPeak');
 avgdfPeak = mean(dfPeak);
 avg_dfPeak_savefile = [figName, '_avg_dfPeak'];
 save(avg_dfPeak_savefile, 'avgdfPeak');
-
-
 
 % % % save a copy in the GroupedData folder)
 % % savepath = '/Volumes/KATIELAB1/Data_Analysis/GroupData/' ;

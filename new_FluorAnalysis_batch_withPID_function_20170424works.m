@@ -329,8 +329,7 @@ for TS_idx = 1:length(TS_listing)
     if useROI == 1 % if using ROI setting
         disp('ROI name is: '); disp(roiName);
         
-        roiSaveFolderPre = strcat(exptFolder,'/',roiName,'/'); % to add a subfolder so that the different ROI analysis sets end up in their own subfolders
-        roiSaveFolder = strcat(roiSaveFolderPre,stimFolder,'_',roiName);
+        roiSaveFolder = strcat(exptFolder,stimFolder,'_',roiName);
         saveDirectory = strrep(roiSaveFolder,'Raw_Unprocessed','Data_Analysis');
         
         disp('saveDirectory is: '); disp(saveDirectory);

@@ -7,14 +7,14 @@ function [] = PlotAll_DelFoverF_ofType_func()
 StartDir = pwd; 
 
 % Variables user can change: 
-<<<<<<< HEAD
+
 x_limits = [0,10];
 y_line_limits = [-1,1];
-=======
-x_limits = [2,7];
+
+x_limits = [2,15];
 onTime = 3; % time of odor onset
 offTime = 5; % time of odor offset
->>>>>>> a19bfc0f32871c96b0b452be9bf63eda21c2bc04
+
 
 %% Load data files from several user-selected directories. 
 % imDir = uigetdir(); % Allow user to select directory. 
