@@ -7,7 +7,7 @@
 % addpath('/Users/katieshak/code/kimaging/gcamp_analysis_copies')
 % %forLaptop
 % OR
-% 
+% addpath('/Users/katherineshakman/code/kimaging/gcamp_analysis_copies')
 % % foriMacDesktop
 % 
 % May also need to add the folders where the data will be, e.g.:
@@ -42,7 +42,7 @@ names = folders(1,:); % keep only the folder names
 
 % Choose ROI for this analysis batch if desired: 
 
-chooseROI = 1; % Set to 0 for no ROI choice, or 1 to use the drawROI function. 
+chooseROI = 0; % Set to 0 for no ROI choice, or 1 to use the drawROI function. 
 
 if chooseROI == 1
     [ROI, roiName] = drawROI();
@@ -65,7 +65,7 @@ for nameIdx = 2:length(names)
     tempFolder = names{1,nameIdx}; % tempFolder is the stimulus type folder (e.g. 2-Oct)
     cd(raw_folder); % go into the experiment folder (e.g. p1_hemi1)
     cd(tempFolder); % go into the stimulus type folder (e.g. 2-Oct)
-    new_FluorAnalysis_batch_withPID_function(ROI, roiName, tempFolder);
+    new_FluorAnalysis_batch_withPID_function_20170609works(ROI, roiName, tempFolder);
     cd ..; % back into experiment folder (e.g. p1_hemi1)
 end
 

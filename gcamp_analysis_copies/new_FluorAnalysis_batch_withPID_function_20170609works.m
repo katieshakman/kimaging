@@ -262,8 +262,13 @@ for TS_idx = 1:length(TS_listing)
     title('Avg dF/F0 During Stim (Filtered)')
     
     tempDir = pwd;
-    heatmap_figName = ['heatmap_' tempDir(strfind(tempDir,'TSer'):end)];
-    saveas(heatmap_fig,heatmap_figName,'fig');
+    heatmap_figName = strcat('heatmap_',tempDir(strfind(tempDir,'TSer'):end));
+    try 
+        saveas(heatmap_fig, heatmap_figName,'fig');
+    catch
+            disp(heatmap_figName); 
+        whos('heatmap_fig*'); 
+    end
     
     %%% Save data to a file containing the Tseries name
     currentDirectory = pwd;
