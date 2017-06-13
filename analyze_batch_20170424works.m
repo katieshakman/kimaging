@@ -53,7 +53,7 @@ end
 try
     tempFolder = names{1,1}; % tempFolder is the stimulus type folder (e.g. 1-oil)
     cd(tempFolder);
-    new_FluorAnalysis_batch_withPID_function(ROI, roiName, tempFolder); 
+    new_FluorAnalysis_batch_withPID_function_20170426works(ROI, roiName, tempFolder); 
     cd ..; % go back up a level   
 catch
     display('First folder not analyzed.');
@@ -65,7 +65,7 @@ for nameIdx = 2:length(names)
     tempFolder = names{1,nameIdx}; % tempFolder is the stimulus type folder (e.g. 2-Oct)
     cd(raw_folder); % go into the experiment folder (e.g. p1_hemi1)
     cd(tempFolder); % go into the stimulus type folder (e.g. 2-Oct)
-    new_FluorAnalysis_batch_withPID_function_20170609works(ROI, roiName, tempFolder);
+    new_FluorAnalysis_batch_withPID_function_20170426works(ROI, roiName, tempFolder);
     cd ..; % back into experiment folder (e.g. p1_hemi1)
 end
 

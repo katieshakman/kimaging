@@ -1,4 +1,4 @@
-function new_FluorAnalysis_batch_withPID_func(ROI, roiName, rawFolder)
+function new_FluorAnalysis_batch_withPID_function_20170609works(ROI, roiName, rawFolder)
 %%% For testing: 
 % rawFolder = ...
 % '/Users/katieshak/Desktop/Data_Analysis_Temp/Raw_Unprocessed/2015_10_08_testing/br1_58B_6fA/p1_hemi1';
@@ -24,6 +24,7 @@ usePID = 0; % set to 0 for ignoring PID data, or to 1 to get/plot PID data.
 
 %% Set up the folders
 myFolder = pwd;
+stimType = rawFolder; 
 analysisFolder = strrep(rawFolder,'Raw_Unprocessed','Data_Analysis') % modifiedStr = strrep(origStr, oldSubstr, newSubstr)
 stimTypeFolder = strrep(myFolder,rawFolder,'')
 

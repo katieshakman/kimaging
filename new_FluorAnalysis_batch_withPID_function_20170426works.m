@@ -279,7 +279,11 @@ for TS_idx = 1:length(TS_listing)
     
     tempDir = pwd;
     heatmap_figName = ['heatmap_' tempDir(strfind(tempDir,'TSer'):end)];
-    saveas(heatmap_fig,heatmap_figName,'fig');
+    try    
+        saveas(heatmap_fig,heatmap_figName,'fig');
+    catch
+        disp('Problem with heatmap figure saving.'); 
+    end
     
     %%% Save data to a file containing the Tseries name
     currentDirectory = pwd;
