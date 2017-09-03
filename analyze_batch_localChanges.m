@@ -39,29 +39,23 @@ names = folders(1,:); % keep only the folder names
 % names = { '1-oil'   , '2-octCSplus'  ,  '6-aceto'};
 
 % Choose ROI for this analysis batch if desired: 
-chooseROI = 1; % Set to 0 for no ROI choice, or 1 to use the drawROI function. 
-if chooseROI == 1
-    [ROI, roiName] = drawROI();
-else
-    ROI = NaN; roiName = [];
-end
+chooseROI = 0; % Set to 0 for no ROI choice, or 1 to use the drawROI function. 
+[ROI, roiName] = drawROI(); 
 
 try
     tempFolder = names{1,1};
     cd(tempFolder);
-    new_FluorAnalysis_batch_withPID_function(ROI, roiName,raw_folder); 
+    new_FluorAnalysis_batch_withPID_function([ROI, roiName]); 
     cd ..; % go back up a level 
-   
 catch
     display('First folder not analyzed.');
-    cd(raw_folder); % go back to starting folder
-    display('Moved back to batch folder.'); 
+    cd ..; % go back up a level
 end
 
 for nameIdx = 2:length(names)
     tempFolder = names{1,nameIdx};
     cd(tempFolder);
-    new_FluorAnalysis_batch_withPID_function(ROI, roiName, raw_folder);
+    new_FluorAnalysis_batch_withPID_function(ROI, roiName);
     cd ..;
 end
 
@@ -88,7 +82,6 @@ cd(an_folder);
 % end
 
 % Get subfolder names (one for each odor/stim, generally)
-%%
 folders = dir(); 
 folders = folders([folders.isdir]);
 folders = struct2cell(folders(arrayfun(@(x) x.name(1), folders) ~= '.')); % Ref: Steve Lord via http://www.mathworks.com/matlabcentral/newsreader/view_thread/258220
