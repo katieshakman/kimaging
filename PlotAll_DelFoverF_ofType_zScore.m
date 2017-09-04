@@ -7,10 +7,11 @@ clear; close all;
 StartDir = pwd; 
 
 % Variables user can change: 
-x_limits = [0,10];
+x_limits = [0,15];
 y_line_limits = [-1,2];
-END_BASELINE = 3; 
-END_ODOR = 5; 
+yLimits = [-6,10]; % Start and ending points of y-axis (for plots, incl. z-scores plot). 
+END_BASELINE = 7; 
+END_ODOR = 8; 
 
 %% Load data files from several user-selected directories. 
 % imDir = uigetdir(); % Allow user to select directory. 
@@ -127,8 +128,8 @@ end
 % framePeriod fetched automatically from config file, stored as framePerVal. 
 % timePoints = [ 1:maxTime ] * framePeriod; 
 fig = figure;
-xvalsOn = [3,3];
-xvalsOff = [5,5];
+xvalsOn = [END_BASELINE,END_BASELINE];
+xvalsOff = [END_ODOR,END_ODOR];
 % plot(timePoints, CaAvg);
 % plot(timePoints, delFoverF);
 subplot(1,2,1); % trial-by-trial plotting. 
@@ -171,7 +172,7 @@ title('deltaF/F vs Time')
 
 % % Add a line at timepoint = 3 sec
     yvals = get(gca, 'ylim');
-    max_y_vals = yvals
+    max_y_vals = yvals;
     
     try
         lineOn = plot(xvalsOn, y_line_limits);
@@ -184,7 +185,7 @@ title('deltaF/F vs Time')
     set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
     set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
 hold off
-ylim(max_y_vals); % rescale the y-axis in case the vertical lines are too tall relative to traces
+ylim(yLimits); % rescale the y-axis in case the vertical lines are too tall relative to traces
 
 % Also plot the mean of each column (timePt):
 
@@ -214,13 +215,13 @@ set(gca,'xlim', x_limits);
 
 %% Plot z-scores(for each trial) versus time. 
 zfig = figure;
-xvalsOn = [3,3];
-xvalsOff = [5,5];
+xvalsOn = [END_BASELINE,END_BASELINE];
+xvalsOff = [END_ODOR,END_ODOR];
 % subplot(1,2,1); % trial-by-trial plotting. 
 hold all
 evokedTrialZSums = zeros(size(zscores, 1),1); % initialize 
 for idx = 1:max(size(dFoF, 1))
-    plot(tPts(1,:), zscores(idx,:));
+    plot(tPts(1,:), zscores(idx,:),'LineWidth',5);
     %
     ind = 0; 
     for i = 1:length(timePoints)
@@ -233,36 +234,38 @@ for idx = 1:max(size(dFoF, 1))
 end
 set(gca,'xlim', x_limits); % set limits of x axis
 
-evokedTrialZAvgs = evokedTrialZSums/denom; 
+evokedTrialZAvgs = evokedTrialZSums/denom;
 
-legend(stringsList) % "creates a legend in the current axes and uses the entries in strings to label each set of data. Specify strings as either a cell array of strings or a matrix of strings."
+avgZscores= mean(zscores,1); 
+plot(tPts(1,:), avgZscores, 'LineWidth',5, 'Color', 'w'); 
+stringsList{length(stringsList)+1,1} = 'Average'; 
+lgd = legend(stringsList); % "creates a legend in the current axes and uses the entries in strings to label each set of data. Specify strings as either a cell array of strings or a matrix of strings."
+lgd.Title.String = 'Trial ID';
 % mean(A,1) is a row vector containing the mean value of each column.
 avg_dFoF = mean(dFoF,1);
 max_dFoF = max(dFoF);
 min_dFoF = min(dFoF);
 
 title('z-score vs Time (mean and sd calculated during baseline period)')
+xlabel('Time (seconds)'); ylabel('Zscore'); 
 % Annotate the point (3, delFoverF(3))
 % text(3, delFoverF(3),'\leftarrow (delFoverF(3sec))',...
 %      'HorizontalAlignment','left')
 % title('GCaMP Average vs Time')
 
 % % Add a line at timepoint = 3 sec
-    yvals = get(gca, 'ylim');
-    max_y_vals = yvals
-    
     try
-        lineOn = plot(xvalsOn, max_y_vals);
-        lineOff = plot(xvalsOff, max_y_vals);
+        lineOn = plot(xvalsOn, yLimits);
+        lineOff = plot(xvalsOff, yLimits);
     catch
         lineOn = plot(xvalsOn, yvals);
         lineOff = plot(xvalsOff, yvals);
     end
     % Make the new vertical line at 3s a dash-dotted black line. 
-    set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
-    set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
+    set(lineOn,'Color','w','LineWidth', 1, 'LineStyle','-.')
+    set(lineOff,'Color','w','LineWidth', 1, 'LineStyle','-.')
 hold off
-ylim(max_y_vals); % rescale the y-axis in case the vertical lines are too tall relative to traces
+ylim(yLimits); % rescale the y-axis in case the vertical lines are too tall relative to traces
 
 % Also plot the mean of each column (timePt):
 
@@ -301,7 +304,7 @@ newFig = figure;
 new_evokedTrialSums = zeros(size(dFoF, 1),1); % initialize 
 hold on
 for idx = 1:max(size(dFoF, 1))
-    plot(tPts(1,:), dFoF(idx,:));
+    plot(tPts(1,:), dFoF(idx,:),'LineWidth',5);
     ind = 0; 
     for i = 1:length(timePoints)
         if (timePoints(i) > 3) && (timePoints(i) < 5)
@@ -311,18 +314,21 @@ for idx = 1:max(size(dFoF, 1))
         end
     end
 end
+
+avg_dFoF_plot = plot(tPts, avg_dFoF,'LineWidth',5,'Color','w');
+xlabel('Time (seconds)'); ylabel('dF/F_0'); 
+legend(stringsList); 
+
 % set limits of x axis
 set(gca,'xlim', x_limits);
     yvals = get(gca, 'ylim');    
     max_y_vals = yvals
     lineOn = plot(xvalsOn, y_line_limits);
     lineOff = plot(xvalsOff, y_line_limits);
-    set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')    % Make the new vertical line at 3s a dash-dotted black line. 
-    set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
+    set(lineOn,'Color','white','LineWidth', 1, 'LineStyle','-.')    % Make the new vertical line at 3s a dash-dotted black line. 
+    set(lineOff,'Color','white','LineWidth', 1, 'LineStyle','-.')
 ylim(max_y_vals); % rescale the y-axis in case the vertical lines are too tall relative to traces
-avg_dFoF_plot = plot(tPts, avg_dFoF);
 hold off
-xlabel('Seconds'); ylabel('dF/F');
 
 a=findobj(gcf); % get the handles associated with the current figure
 
@@ -335,7 +341,9 @@ set(allaxes,'FontName','Arial','FontWeight','Bold','LineWidth',2,...
 set(alllines,'Linewidth',4);
 set(alltext,'FontName','Arial','FontWeight','Bold','FontSize',14);
 % info on setting all axes, lines, and text properties from: http://matlab.cheme.cmu.edu/2011/08/01/plot-customizations-modifying-line-text-and-figure-properties/
-set(avg_dFoF_plot, 'Color', 'black', 'LineWidth', 5)
+set(avg_dFoF_plot, 'Color', 'white', 'LineWidth', 5)
+
+
 
 %% Save figure files and evokedAvg value
 dateStart = strfind(imDir, '201'); 
@@ -411,6 +419,8 @@ avgdfPeak = mean(dfPeak);
 avg_dfPeak_savefile = [figName, '_avg_dfPeak'];
 save(avg_dfPeak_savefile, 'avgdfPeak');
 
+avg_Zscore_savefile = [figName, '_', stringsList{1}(1:13), '_avgZscore']; 
+save(avg_Zscore_savefile, 'avgZscores','timePoints');
 
 
 % % % save a copy in the GroupedData folder)

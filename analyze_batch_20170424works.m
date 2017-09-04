@@ -42,7 +42,7 @@ names = folders(1,:); % keep only the folder names
 
 % Choose ROI for this analysis batch if desired: 
 
-chooseROI = 0; % Set to 0 for no ROI choice, or 1 to use the drawROI function. 
+chooseROI = 1; % Set to 0 for no ROI choice, or 1 to use the drawROI function. 
 
 if chooseROI == 1
     [ROI, roiName] = drawROI();
@@ -106,7 +106,7 @@ for nameIdx = 1:length(names)
         currDir = names{1,nameIdx}; 
         cd(currDir);
         display(currDir);
-        PlotAll_DelFoverF_ofType_func(); 
+        PlotAll_DelFoverF_ofType_func_20170613(); 
         cd .. ;
     catch
        cd .. ; % skips over non-existent analysis dirs
@@ -116,7 +116,7 @@ for nameIdx = 1:length(names)
     try
         currDir = names{1,nameIdx}; 
         cd(currDir);
-        PlotAll_DelFoverF_ofType_func(currDir); 
+        PlotAll_DelFoverF_ofType_func_20170613(currDir); 
         cd .. ;
     catch
        cd .. ; % skips over non-existent analysis dirs

@@ -2,7 +2,7 @@
 % Plot from previously stored deltaF/F data and timepoints. 
 % clear all; close all;
 
-%function [] = PlotAll_DelFoverF_ofType_func(imDir)
+function [] = PlotAll_DelFoverF_ofType_func(imDir)
 
 StartDir = pwd; 
 
@@ -216,15 +216,22 @@ set(gca,'xlim', x_limits);
 dateStart = strfind(imDir, '201'); 
 dateEnd = dateStart-1 + min(strfind(imDir(dateStart:end), '/'))-1; 
 date = imDir(dateStart:dateEnd);
+brStart = dateEnd+2; 
+brEnd = dateEnd+5; 
+brID = imDir(brStart:brEnd); % ID for current brain 
 trialStart = max(strfind(imDir, '/'))+1; 
 trialID = imDir(trialStart:end); 
-figName = [date,'_', trialID];
-%savePath = currentDirectory(...
-            %strfind(currentDirectory, 'Raw_Un')+16:strfind(...
-            %currentDirectory, 'TSeries')-1);
+figName = [date,'_',brID,'_', trialID];
+savePath = currentDirectory(...
+            strfind(currentDirectory, 'Raw_Un')+16:strfind(...
+            currentDirectory, 'TSeries')-1);
 %figName = savePath; 
-saveas(fig, figName, 'fig'); 
-saveas(fig, figName, 'png'); 
+try
+    saveas(fig, figName, 'fig');
+    saveas(fig, figName, 'png');
+catch
+    ;
+end
 
 ind = 0; 
 

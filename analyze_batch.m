@@ -42,7 +42,7 @@ names = folders(1,:); % keep only the folder names
 
 % Choose ROI for this analysis batch if desired: 
 
-chooseROI = 0; % Set to 0 for no ROI choice, or 1 to use the drawROI function. 
+chooseROI = 1; % Set to 0 for no ROI choice, or 1 to use the drawROI function. 
 
 if chooseROI == 1
     [ROI, roiName] = drawROI();

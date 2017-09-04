@@ -3,7 +3,7 @@
 clear all; close all; 
 
 % Variables user can change: 
-x_limits = [2000,7000];
+x_limits = [0000,16000];
 %% Import data
 PID_file = uigetfile('*.csv');
 % importer interface --> importable range A2:B1001
