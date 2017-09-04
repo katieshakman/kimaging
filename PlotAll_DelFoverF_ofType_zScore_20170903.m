@@ -41,6 +41,21 @@ dFcount = 0; % initialize
 % dFoF = zeros(1, max(size(all_delFoverF_files))); % Initialize
 % tPts = zeros(1, max(size(all_timePoints_files))); % Initialize
 pattern = '._' ;
+
+for trial = 1:max(size(all_timePoints_files))
+    notTrueMAT = strfind(all_timePoints_files(trial,1).name, pattern);
+    if notTrueMAT
+        ; % do nothing for now.  maybe delete these files in future.
+    else
+        load(all_timePoints_files(trial,1).name);
+        tPtsCount = tPtsCount + 1; % iterate
+        tPts{tPtsCount,1} = timePoints;
+        if length(timePoints) > length(longestTimePts)
+            longestTimePts = timePoints;
+        end
+    end
+end
+
 for trial = 1:max(size(all_delFoverF_files))
     %     new_delFoverF = load(all_delFoverF_files(idx,1).name);
     try
@@ -60,34 +75,21 @@ for trial = 1:max(size(all_delFoverF_files))
         % used only part of the name that contains date and tseries number
     end
 end
-   
+
 % Interpolate dF/F data
-if size(tPts,2) > 1
-    % Want to interpolate so we can look at all of these traces
-    % together.
-    preInterp_dFoF = dFoF;
-    dFoF = cell(size(tPts));
-    for trialIdx = 1:length(tPts)
-        dFoF(trialIdx) = interp1(tPts{trialIdx},preInterp_dFoF(trialIdx,:),longestTimePts);
-    end
+% Want to interpolate so we can look at all of these traces
+% together.
+disp('Interpolating...');
+preInterp_dFoF = dFoF;
+dFoF = cell(size(tPts));
+for trialIdx = 1:length(tPts)
+    tempInterp = interp1(tPts{trialIdx},preInterp_dFoF{trialIdx},longestTimePts);
+    dFoF{trialIdx} = tempInterp;
 end
 
+
 stringsList = cellstr(stringsList); % make cell array list of strings
-clear idx;
-for trial = 1:max(size(all_timePoints_files))
-    notTrueMAT = strfind(all_timePoints_files(trial,1).name, pattern);
-    if notTrueMAT
-        ; % do nothing for now.  maybe delete these files in future.
-    else
-        load(all_timePoints_files(trial,1).name);
-        tPtsCount = tPtsCount + 1; % iterate
-        tPts{tPtsCount} = timePoints;
-        if length(timePoints) > length(longestTimePts)
-            longestTimePts = timePoints;
-        end
-    end
-end
-clear idx;
+
 for trial = 1:max(size(all_baseline_files)) % also get baselines
     notTrueMAT = strfind(all_baseline_files(trial,1).name, pattern);
     if notTrueMAT
@@ -97,7 +99,7 @@ for trial = 1:max(size(all_baseline_files)) % also get baselines
         F0s = [F_0; F0s];
     end
 end
-clear idx;
+
 clear pattern;
 
 %% Check data and Calc z-scores
@@ -115,7 +117,7 @@ Atrapz = nan(size(all_baseline_files));
 dfPeak = nan(size(all_baseline_files)); % peak of each trial
 % raw = []; % init
 for trial =1:length(tPts)
-    assert(size(tPts,1) < size(tPts,2)); % if fails, probably have huge num trials or too few frames
+    assert(size(tPts,2) < size(tPts,1)); % if fails, probably have huge num trials or too few frames
     if trial == 1
         postOnset = nan(size(dFoF{1},1),size(dFoF{1},2)+1-onIdx);
     end
@@ -126,11 +128,11 @@ for trial =1:length(tPts)
     Atrapz(trial) = trapz(postOnset(trial,:));
     dfPeak(trial) = max(dFoF{trial}); % peak in entire trial
     % Get back the raw traces:
-    raw(trial,:) = (dFoF{trial}+1)*F0s(trial);
+    raw(trial,:) = (dFoF{trial}+F0s(trial))*F0s(trial);
     % Get mean and sigma during baseline (pre-stimulus) for the trace:
-    preOdorInd = timePoints<END_BASELINE; % gets recalculated each trial
-    preOdorRaw = raw( trial,preOdorInd ); % gets recalculated each trial
-    postStartBaseInd = timePoints>START_BASELINE;
+    preOdorInd = longestTimePts<END_BASELINE; % gets recalculated each trial
+    preOdorRaw = raw(trial,: ) .* preOdorInd; % gets recalculated each trial
+    postStartBaseInd = longestTimePts>START_BASELINE;
     baselnInd = preOdorInd.*postStartBaseInd;
     baselnRaw = raw( trial, : ) .* baselnInd;
     raw_preOdor_mean(trial) = mean(preOdorRaw); % single value each trial
@@ -157,7 +159,7 @@ subplot(1,2,1); % trial-by-trial plotting.
 hold all
 evokedTrialSums = zeros(length(dFoF),1); % initialize
 for trial = 1:length(dFoF)
-    plot(timePoints, dFoF{trial});
+    plot(longestTimePts, dFoF{trial});
     %
     ind = 0;
     for i = 1:length(timePoints)
@@ -176,7 +178,7 @@ evokedTrialAvgs = evokedTrialSums/denom;
 %legend('show')
 legend(stringsList) % "creates a legend in the current axes and uses the entries in strings to label each set of data. Specify strings as either a cell array of strings or a matrix of strings."
 % mean(A,1) is a row vector containing the mean value of each column.
-dFoFmat = cell2mat(dFoF); 
+dFoFmat = cell2mat(dFoF);
 avg_dFoF = mean(dFoFmat,1);
 max_dFoF = max(dFoFmat);
 min_dFoF = min(dFoFmat);
@@ -212,7 +214,7 @@ ylim(max_y_vals); % rescale the y-axis in case the vertical lines are too tall r
 % Also plot the mean of each column (timePt):
 
 subplot(1,2,2);
-avg_dFoF_plot = plot(timePoints, avg_dFoF);
+avg_dFoF_plot = plot(longestTimePts, avg_dFoF);
 set(avg_dFoF_plot, 'Color', 'blue', 'LineWidth', 1)
 
 hold on
@@ -243,7 +245,7 @@ xvalsOff = [5,5];
 hold all
 evokedTrialZSums = zeros(size(zscores, 1),1); % initialize
 for trial = 1:length(dFoF)
-    plot(timePoints, zscores(trial,:));
+    plot(longestTimePts, zscores(trial,:));
     %
     ind = 0;
     for i = 1:length(timePoints)
@@ -287,27 +289,39 @@ set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
 hold off
 ylim(max_y_vals); % rescale the y-axis in case the vertical lines are too tall relative to traces
 
-% Also plot the mean of each column (timePt):
+%% Plot full length baseline z-scores avg versus time.
+zLongFig = figure;
+xvalsOn = [END_BASELINE,END_BASELINE];
+xvalsOff = [END_ODOR,END_ODOR];
+zscoresAvgLong = mean(zscoresLongBaseln,1);
 
-% subplot(1,2,2);
-% avgplot = plot(tPts, avg_zscores);
-% set(avgplot, 'Color', 'blue', 'LineWidth', 1)
-%
-% hold on
-% title('Average deltaF/F vs Time')
+hold all
+plot(longestTimePts, zscoresAvgLong);
+set(gca,'xlim', x_limits); % set limits of x axis
+legend('Average') % "creates a legend in the current axes and uses the entries in strings to label each set of data. Specify strings as either a cell array of strings or a matrix of strings."
+title('Long Baseline z-score Avg vs Time (mean and sd calculated during full baseline period)')
+
+% mean(A,1) is a row vector containing the mean value of each column.
+avg_dFoF = mean(cell2mat(dFoF),1);
+max_dFoF = max(cell2mat(dFoF));
+min_dFoF = min(cell2mat(dFoF));
 
 % % Add a line at timepoint = 3 sec
-%     set(gca, 'ylim', max_y_vals);
-%     yvals = get(gca, 'ylim');
-%     lineOn = plot(xvalsOn, yvals);
-%     lineOff = plot(xvalsOff, yvals);
-%     % Make the new vertical line at 3s a dash-dotted black line.
-%     set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
-%      % Make the new vertical line at 4s a dash-dotted black line.
-%     set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
-%     %legend
-% hold off
-% set(gca,'xlim', x_limits);
+yvals = get(gca, 'ylim');
+max_y_vals = yvals;
+
+try
+    lineOn = plot(xvalsOn, max_y_vals);
+    lineOff = plot(xvalsOff, max_y_vals);
+catch
+    lineOn = plot(xvalsOn, yvals);
+    lineOff = plot(xvalsOff, yvals);
+end
+% Make the new vertical line at 3s a dash-dotted black line.
+set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
+set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
+hold off
+ylim(max_y_vals); % rescale the y-axis in case the vertical lines are too tall relative to traces
 
 %% Make a single figure with the mean and SEM error bars for all the traces in this group/folder:
 avgdfEachTimepoint = mean(cell2mat(dFoF),1);
@@ -315,9 +329,9 @@ ntrials = length(dFoF)
 SDdfEachTimepoint = std(cell2mat(dFoF),1);
 SEMdfEachTimepoint = SDdfEachTimepoint./sqrt(ntrials);
 figure;
-plot(timePoints,avgdfEachTimepoint);
+plot(longestTimePts,avgdfEachTimepoint);
 hold on
-errorbar(timePoints,avgdfEachTimepoint,SEMdfEachTimepoint);
+errorbar(longestTimePts,avgdfEachTimepoint,SEMdfEachTimepoint);
 hold off
 %% Make a single-panel figure with the lines and the average superimposed in black line:
 % newFig = figure;
