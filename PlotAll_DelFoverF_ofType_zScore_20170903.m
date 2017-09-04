@@ -14,12 +14,7 @@ END_BASELINE = 3;
 END_ODOR = 5;
 
 %% Load data files from several user-selected directories.
-% imDir = uigetdir(); % Allow user to select directory.
-% pwdir = pwd;
-% pwdir = pwdir(end-length(imDir)+1:end);
-% if ~strcmp(pwdir,imDir)
-%     cd(imDir);
-% end
+
 imDir = pwd;
 currentDirectory = pwd; % For use in save paths.
 
@@ -135,10 +130,10 @@ for trial =1:length(tPts)
     postStartBaseInd = longestTimePts>START_BASELINE;
     baselnInd = preOdorInd.*postStartBaseInd;
     baselnRaw = raw( trial, : ) .* baselnInd;
-    raw_preOdor_mean(trial) = mean(preOdorRaw); % single value each trial
-    raw_preOdor_sigma(trial) = std(preOdorRaw); % single value each trial
-    raw_baseln_mean(trial) = mean(baselnRaw);
-    raw_baseln_sigma(trial) = std(baselnRaw);
+    raw_preOdor_mean(trial) = nanmean(preOdorRaw); % single value each trial
+    raw_preOdor_sigma(trial) = nanstd(preOdorRaw); % single value each trial
+    raw_baseln_mean(trial) = nanmean(baselnRaw);
+    raw_baseln_sigma(trial) = nanstd(baselnRaw);
     % Get zscores for each trace:
     zscoresLongBaseln(trial,:) = ( raw(trial,:)-raw_preOdor_mean(trial) )/raw_preOdor_sigma(trial) ;
     zscores(trial,:) = ( raw(trial,:)-raw_baseln_mean(trial) ) / raw_baseln_sigma(trial) ;
