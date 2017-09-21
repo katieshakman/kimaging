@@ -10,8 +10,8 @@ StartDir = pwd;
 x_limits = [0,15];
 y_line_limits = [-1,2];
 yLimits = [-6,10]; % Start and ending points of y-axis (for plots, incl. z-scores plot). 
-END_BASELINE = 3; 
-END_STIM = 5; 
+END_BASELINE = 8; 
+END_STIM = 9; 
 
 %% Load data files from several user-selected directories. 
 % imDir = uigetdir(); % Allow user to select directory. 
