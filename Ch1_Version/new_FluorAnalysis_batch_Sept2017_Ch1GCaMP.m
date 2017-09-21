@@ -17,7 +17,6 @@ clear all; close all;
 getAllChAvg = 1; % Set to 1 to get an average image in all channels. 
 getCh1Avg = 0; % Set this value to 1 to get the Ch1 Avg Img.
 useROI = 1; % set useROI to 1 to load and apply an ROI  
-roiName = 'v1_test';
 stim = '_'; 
 
 startDir = pwd; % default starting dir
@@ -32,6 +31,7 @@ if useROI == 1
     cd(ROIdir); 
     load(ROIfile); % loads as variable 'ROI'
     cd(startDir); 
+    roiName = ROIfile(1:end-4);
 end
 %% Compile list of Tseries directories in current folder.
 myFolder = pwd; 
