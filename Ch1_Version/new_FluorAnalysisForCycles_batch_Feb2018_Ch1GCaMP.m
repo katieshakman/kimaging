@@ -1,4 +1,4 @@
-%Katie Shakman 
+%Katie Shakman
 %% Fluorescence Analysis
 % Code to process GCaMP calcium imaging Tseries (from 2-photon).
 % What it does/will do:
@@ -10,67 +10,55 @@
 % Ch1 : green gaasp (GCaMP or GFP)
 % Ch2 : red PMT 1 HV (RFP)
 
-clear all; close all; 
+% clear all; close all;
+function [] = new_FluorAnalysis_batch_Sept2017_Ch1GCaMP()
 
 %% User Parameters/Settings
 
-getAllChAvg = 1; % Set to 1 to get an average image in all channels. 
+getAllChAvg = 1; % Set to 1 to get an average image in all channels.
 getCh1Avg = 0; % Set this value to 1 to get the Ch1 Avg Img.
-useROI = 1; % set useROI to 1 to load and apply an ROI  
-stim = 'Ch1'; 
-stimOn = 6; 
-stimOff = 8; 
-TSvsCycle = 0; 
+useROI = 1; % set useROI to 1 to load and apply an ROI
+stim = 'Ch1';
+stimOn = 6;
+stimOff = 8;
 
 startDir = pwd; % default starting dir
 
 % Indicate whether to use long format directory name for saving dir.
-LongSavePath = 1; 
+LongSavePath = 1;
 
 %% Load ROI
 if useROI == 1
-    [ROIfile, ROIfilePath] = uigetfile('Please select ROI file'); 
-    cd(ROIfilePath); 
+    [ROIfile, ROIfilePath] = uigetfile('Please select ROI file');
+    cd(ROIfilePath);
     load(ROIfile); % loads as variable 'ROI'
-    cd(startDir); 
+    cd(startDir);
     roiName = ROIfile(1:end-4);
 end
 %% Compile list of Tseries directories in current folder.
-myFolder = pwd; 
-if TSvsCycle == 0
-    TS_listing = dir('Tseries*');
+myFolder = pwd;
+
+TS_listing = dir('Tseries*');
+if isempty(TS_listing)
+    TS_listing = dir('TSeries*');
     if isempty(TS_listing)
-        TS_listing = dir('TSeries*');
-        if isempty(TS_listing)
-            display('No TSeries found in directory.')
-        end
-    end
-elseif TSvsCycle == 1
-    TS_listing = dir('Cycle*');
-    if isempty(TS_listing)
-        TS_listing = dir('Cycle*');
-        if isempty(TS_listing)
-            display('No Cycles found in directory.')
-        end
+        display('No TSeries found in directory.')
     end
 end
+
 %% Read the image (and get an ROI, though this not implemented now).
 for TS_idx = 1:length(TS_listing)
-    close all; 
-    % clear all variables except myFolder, TS_listing, and TS_idx:
-    %clearvars -except myFolder TS_listing TS_idx LongSavePath getAllChAvg getCh1Avg useROI startDir; 
-%     clear all; close all;
-%     imDir = uigetdir(); % Allow user to specify the directory to read images from.
-try 
-    mySubfolder = TS_listing(TS_idx).name
-    imDir = fullfile(myFolder, mySubfolder); 
-    cd(imDir);
-catch
-    mySubfolder = TS_listing(TS_idx).name
-    imDir = fullfile(myFolder, mySubfolder); 
-    cd(imDir);
-end
-    tifIm = dir('*.tif');
+    close all;
+    try
+        mySubfolder = TS_listing(TS_idx).name
+        imDir = fullfile(myFolder, mySubfolder);
+        cd(imDir);
+    catch
+        mySubfolder = TS_listing(TS_idx).name
+        imDir = fullfile(myFolder, mySubfolder);
+        cd(imDir);
+    end
+    tifIm = dir('*ome.tif');
     %im1 = imread(tifIm(1).name); % Below: changed this to the average image for the stack.
     cd ../; % Move to containing folder (up one level).
     currFolderName = pwd; % Get name of containing folder.
@@ -87,7 +75,7 @@ end
         end
         % avgIm = zeros(512,512); % Initialize the average image variable.
         avgIm = runningTotIm./length(tifIm);
-%         clear runningTotIm;
+        %         clear runningTotIm;
     end
     
     % Specify ROI if desired
@@ -109,50 +97,14 @@ end
     else
         ROI = ones(size(avgIm));
     end
-    %% Get the value of framePer for this image stack. Modified From RosettaCode
-    % "This is defined as a function, parameters are returned as part
-    % of a struct. When the first line, and the assignment to return
-    % values are removed, it is a script that stores the parameters in
-    % the local workspace.
-    % Source:
-    % http://rosettacode.org/wiki/Read_a_configuration_file#MATLAB_.2F_Octave
-    
-    % configfile = dir('*.cfg'); % Changed from uigetfile to dir
-    %c = dir('*.cfg');
-% %     c = dir('*.xml');
-% %     configfile = c.name; %c(1,1).name;
-% %     fid = fopen(configfile);
-% %     if fid<0, error('cannot open file %s\n',a); end;
-% %     
-% %     while ~feof(fid)
-% %         line = strtrim(fgetl(fid));
-% %         framePerLocation = strfind(line, 'framePeriod=');
-% %         if ~isempty(framePerLocation)
-% %             framePerLine = line;
-% %             %     else isempty(line) || all(isspace(line)) || strncmp(line,'#',1) || strncmp(line,';',1),
-% %             %         ; % no operation
-% %         else
-% %             framePerLine = framePerLocation; 
-% %         end;
-% %     end;
-% %     fclose(fid);
-% %     % whos,     % shows the parameter in the local workspace
-
-c = dir('TS*.xml');
-myXML = c.name;
-mytext = fileread(myXML); 
-framePerLoc = strfind(mytext, 'framePeriod" value="');
-framePerStrLen = length('framePeriod" value="'); 
-framePerEnd = framePerLoc + framePerStrLen + 10;  % can be adjusted to auto-length later 
-framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
-    % Now copy the repetitionPeriod value out of the line we just found:
-    %repPerLoc = strfind(framePerLine, 'repetitionPeriod="');
-    % repetitionPeriod seems to be framePeriod (probably not scanLinePeriod) in new prairieView
-    % repPerStrLength = length('repetitionPeriod="'); % 18 for 'repetitionPeriod="'
-    %repPerStrLength = length('framePeriod" value="');
-    %endLoc = strfind(framePerLine, 'triggerSyncExperiment=') - 3; % changed: from ? ? 2? to ? ? 3?.
-    %framePerVal = str2double(mytext(framePerLoc:framePerEnd)); % Maybe change this so all digits are preserved, instead of truncated?
-    % framePerVal = str2ndouble(framePerLine(valueLoc+7:end-5));
+    %% Get the value of framePer for this image stack.
+    c = dir('TS*.xml');
+    myXML = c.name;
+    mytext = fileread(myXML);
+    framePerLoc = strfind(mytext, 'framePeriod" value="');
+    framePerStrLen = length('framePeriod" value="');
+    framePerEnd = framePerLoc + framePerStrLen + 10;  % can be adjusted to auto-length later
+    framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     
     if getCh1Avg == 1
         % Get the average image for the stack in only Ch1:
@@ -178,35 +130,8 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     % figure;
     divImBy = 2; % Daisuke initially suggested 16 for this value.
     
-    % subplot(1,2,1); imshow(uint8(avgIm))
-    % subplot(1,2,2); imshow(uint8(avgIm)./divImBy)
-    % title('figure1')
-    % if isempty(reply)
-    %     reply = n;
-    % elseif strcmp(reply,'y')
-    %     x = impoly;
-    %     pos = getPosition(x);
-    %     mask = createMask(x);
-    %     figure; imshow(mask)
-    %     title('figure2')
-    % %     roiv1 = double(im1).*mask;
-    %     roiv1 = double(avgIm).*mask;
-    %     figure; imshow(uint8(roiv1))
-    % %     figure; imshow(uint8(roiv1./16))
-    %     title('figure3')
-    % end
     
     %% Get GCaMP average at each time point; convert to delF/F.
-    % TODO: Add in ROI restriction.
-    % Do this only for the part of tifIm that is Ch1 (GCaMP for 9th floor settings)
-    
-    %Ch2tifIm = %all of tifIm for which tifIm(1).name contains Ch2
-    % TODO: Check that there are Ch1, Ch2, and Ch3 images
-    % before dividing by 3 (if only Ch1 and Ch2, divide by 2).
-    % % % maxTime = length(tifIm)/3; % Last timepoint/slice,
-    % div by 3 since only second 1/3 of the Tseries files will be Ch2 (if Ch3 data exists).
-    % TODO: Change to Ch1tifIm instead of tifIm, so we are sure we only use Ch1
-    % images.
     
     tifIm_names = cell(length(tifIm),1);
     for idx = 1:length(tifIm)
@@ -216,8 +141,7 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     tifImCh1_indices = cell2mat(Ch1_indices);
     % tifImCh1_indices = tifImCh1_indices * ones(length(tifImCh1_indices));
     maxTime = length(tifImCh1_indices);
-    CaAvgDenom = size(ROI,1); % Total number of pixels per slice (usually). Check actual resolution in xml file.
-    % TODO: Change the above (CaAvgDenom) to get the true image (or ROI) size.
+    CaAvgDenom = size(ROI,1); % Total number of pixels per slice (usually).
     
     for timeIdx = 1:maxTime
         currTif = imread(tifIm(timeIdx).name) ;
@@ -230,8 +154,14 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     timePtStimOnsec = stimOn/framePerVal; % 3sec*(1/(sec/frame)) = 3sec/framePerVal
     if timePtStimOnsec < 1 || isnan(framePerVal)
         F_0 = mean(CaAvg(1:1)); % Average fluorescence in first frame.
-    else
+        disp('Using first frame as baseline.'); 
+    elseif timePtStimOnsec < 6 
         F_0 = mean(CaAvg(1:floor(timePtStimOnsec))); % Average fluorescence up to 3 sec (takes floor of timePt3sec).
+        disp('Using first frame until stim onset for baseline.'); 
+    else
+        fourSecFrame = floor(4/framePerVal); 
+        F_0 = mean(CaAvg(fourSecFrame:floor(timePtStimOnsec))); % Omit the first seconds from baseline. 
+        disp('Using seconds before stim onset for baseline.'); 
     end
     
     % TODO: Vectorize below.
@@ -242,26 +172,21 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     timePoints = [ 1:maxTime ] .* framePerVal;
     % Above: time is in sec, framePerVal is in sec/frame --> divide by framePer
     % allTimePoints = [framePerVal:maxTime];
-   
+    
     %% Save data to a file containing the Tseries name
     currentDirectory = pwd;
-    if TSvsCycle == 0 
-        TseriesLoc = strfind(currentDirectory, 'TSeries-');
-        if isempty(TseriesLoc)
-            TseriesLoc = strfind(currentDirectory, 'Tseries-');
-        end
-    elseif TSvsCycle == 1
-        TseriesLoc = strfind(currentDirectory, 'Cycle');
-        if isempty(TseriesLoc)
-            TseriesLoc = strfind(currentDirectory, 'Cycle');
-        end
+    
+    TseriesLoc = strfind(currentDirectory, 'TSeries-');
+    if isempty(TseriesLoc)
+        TseriesLoc = strfind(currentDirectory, 'Tseries-');
     end
+    
     cd ..
     parentDir = pwd;
     cd(currentDirectory); % Change back to the tseries-containing directory.
     
     saveName = NaN;
-    tic 
+    tic
     while isnan(saveName)
         for end_idx = 1:50 %length(parentDir)
             if strcmp(parentDir(end-(end_idx)), '/') || strcmp(...
@@ -271,7 +196,7 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
         end
         loopTime = toc;
         if loopTime > 10
-            saveName = strcat(parentDir,'saveNameError'); 
+            saveName = strcat(parentDir,'saveNameError');
             break
         end
     end
@@ -285,9 +210,7 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     else
         trialType = strcat('_', parentDir(end-2:end));
     end
-    % timePoints_FileName = strcat(currentDirectory(TseriesLoc:end), currFolderName, '_timePoints');
     
-    % timePoints_FileName = [currentDirectory(TseriesLoc:end) trialType '_' 'timePoints'];
     timePoints_FileName = strcat(currentDirectory(TseriesLoc:end), trialType, '_timePoints');
     
     delFoverF_FileName = strcat(currentDirectory(TseriesLoc:end), trialType, '_delFoverF');
@@ -312,10 +235,10 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
             savePath);
     end
     
-    % Make new Data_Analysis subfolder to save everything into. 
+    % Make new Data_Analysis subfolder to save everything into.
     if useROI == 1 % if using ROI setting
         if ~exist('roiName')
-            roiName = input('Please enter a name for the roi: ','s'); 
+            roiName = input('Please enter a name for the roi: ','s');
         end
         disp('ROI name is: '); disp(roiName);
         
@@ -323,11 +246,10 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
             exptFolder = startDir;
         end
         roiSaveFolderPre = strcat(exptFolder,'/',roiName,'/'); % to add a subfolder so that the different ROI analysis sets end up in their own subfolders
-        stimFolder = stim; 
+        stimFolder = stim;
         roiSaveFolder = strcat(roiSaveFolderPre,stimFolder,'_',roiName);
         saveDirectory = strrep(roiSaveFolder,'Raw_Unprocessed','Data_Analysis');
-%         saveDirectory = strrep(roiSaveFolderPre,'Raw_Unprocessed','Data_Analysis');
-          
+        
         disp('saveDirectory is: '); disp(saveDirectory);
     else
         saveDirectory = strcat(stimFolder,exptFolder);
@@ -339,33 +261,43 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     cd(saveDirectory);
     
     
-    try    
+    try
         save(timePoints_FileName, 'timePoints');
     catch
-        save('timePoints','timePoints'); 
+        fileName = timePoints_FileName;
+        locs = strfind(fileName,'TSeries');
+        substr = fileName(locs(1):locs(2));
+        newsubstr = substr(end);
+        fileName2 = strrep(fileName,substr,newsubstr);
+        save(fileName2,'timePoints');
     end
     
     try
         save(delFoverF_FileName, 'delFoverF');
     catch
-        save('delFoverF','delFoverF'); 
+        fileName = delFoverF_FileName;
+        locs = strfind(fileName,'TSeries');
+        substr = fileName(locs(1):locs(2));
+        newsubstr = substr(end);
+        fileName2 = strrep(fileName,substr,newsubstr);
+        save(fileName2,'delFoverF');
     end
-
+    
     try
-        save(baselineF0_FileName, 'F_0'); % Save the baseline (F_0)! 
-    catch 
-        save('F_0','F_0'); 
+        save(baselineF0_FileName, 'F_0'); % Save the baseline (F_0)!
+    catch
+        fileName = baselineF0_FileName;
+        locs = strfind(fileName,'TSeries');
+        substr = fileName(locs(1):locs(2));
+        newsubstr = substr(end);
+        fileName2 = strrep(fileName,substr,newsubstr);
+        save(fileName2,'F_0');
     end
     
     cd(currentDirectory);
-    % % % Previously: Save a copy of each variable in the containing folder:
-    % cd(parentDir)
-    % save(timePoints_FileName, 'timePoints');
-    % save(delFoverF_FileName, 'delFoverF');
-    % cd(currentDirectory)
-   
+    
     %% Plot GCaMP average versus time.
-    % repetitionPeriod = 0.818748; % Frame period : seconds/frame.
+    % repetitionPeriod is Frame period : seconds/frame.
     % repetitionPeriod fetched automatically from config file, stored as framePerVal.
     % timePoints = [ 1:maxTime ] * repetitionPeriod;
     
@@ -374,30 +306,22 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     plot(timePoints, delFoverF);
     hold on
     title('deltaF/F vs Time')
-    % % Add a line at timepoint = 3 sec
+    % % Mark the stimulus period
     yvals = get(gca, 'ylim');
-    xvalsOn = [stimOn,stimOn]; 
-    xvalsOff = [stimOff,stimOff]; % use 4 for Pipette stim, 5 for Odor Deliv.
+    xvalsOn = [stimOn,stimOn];
+    xvalsOff = [stimOff,stimOff];
     lineOn = plot(xvalsOn, yvals);
     lineOff = plot(xvalsOff, yvals);
-    % Make the new vertical line at 3s a dash-dotted black line.
+    % Make the new vertical line(s) dash-dotted black line(s).
     set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
     set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
     hold off
     
-    % % Annotate the point (3, delFoverF(3))
-    % text(3, delFoverF(3),'\leftarrow (delFoverF(3sec))',...
-    %      'HorizontalAlignment','left')
-    % title('GCaMP Average vs Time')
-    % % Add a line at timepoint = 3 sec
-    % % ylimits = ylim;
-    % % maxY = max(delFoverF);
-    % % line([3 0.01],[3 maxY],[1 1],'Marker','.','LineStyle','-')
     displayLine = ['Analysis for  ' ...
         currentDirectory(strfind(currentDirectory, '201'):end) ...
         ' completed.'];
     disp(displayLine);
-end  
-cd(saveDirectory); 
-% could also go back to the starting directory with: 
-% cd(startDir); 
+end
+cd(saveDirectory);
+% could also go back to the starting directory with:
+% cd(startDir);

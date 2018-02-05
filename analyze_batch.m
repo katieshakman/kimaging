@@ -7,7 +7,7 @@
 % addpath('/Users/katieshak/code/kimaging/gcamp_analysis_copies')
 % %forLaptop
 % OR
-% addpath(genpath('/Users/katherineshakman/code/kimaging/gcamp_analysis_copies'))
+% 
 % % foriMacDesktop
 % 
 % May also need to add the folders where the data will be, e.g.:

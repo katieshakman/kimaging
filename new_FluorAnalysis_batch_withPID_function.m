@@ -1,4 +1,4 @@
-function newFluorAnalysis_batch_withPID_func(ROI, roiName, inputFolder)
+function newFluorAnalysis_batch_withPID_function_5thFl(ROI, roiName, inputFolder)
 
 % %% For testing: 
 % inputFolder = pwd; 

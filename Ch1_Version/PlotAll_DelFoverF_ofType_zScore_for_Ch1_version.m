@@ -1,17 +1,18 @@
 %% Plot Only Fluor Analysis with Z-score
 % Plot from previously stored deltaF/F data and timepoints. 
-clear; close all;
+% clear; close all;
 
-%function [] = PlotAll_DelFoverF_ofType_zScore()
+% function [] = PlotAll_DelFoverF_ofType_zScore()
+function [] = PlotAll_DelFoverF_ofType_zScore_for_Ch1_version()
 
 StartDir = pwd; 
 
 % Variables user can change: 
-x_limits = [0,15];
+x_limits = [0,10];
 y_line_limits = [-1,2];
 yLimits = [-6,10]; % Start and ending points of y-axis (for plots, incl. z-scores plot). 
-END_BASELINE = 3; 
-END_STIM = 5; 
+END_BASELINE = 6; 
+END_STIM = 8; 
 
 %% Load data files from several user-selected directories. 
 % imDir = uigetdir(); % Allow user to select directory. 
@@ -319,7 +320,7 @@ for idx = 1:max(size(dFoF, 1))
     end
 end
 
-avg_dFoF_plot = plot(tPts, avg_dFoF,'LineWidth',5,'Color','w');
+avg_dFoF_plot = plot(tPts, avg_dFoF,'LineWidth',5,'Color','k');
 xlabel('Time (seconds)'); ylabel('dF/F_0'); 
 legend(stringsList); 
 
@@ -345,7 +346,7 @@ set(allaxes,'FontName','Arial','FontWeight','Bold','LineWidth',2,...
 set(alllines,'Linewidth',4);
 set(alltext,'FontName','Arial','FontWeight','Bold','FontSize',14);
 % info on setting all axes, lines, and text properties from: http://matlab.cheme.cmu.edu/2011/08/01/plot-customizations-modifying-line-text-and-figure-properties/
-set(avg_dFoF_plot, 'Color', 'white', 'LineWidth', 5)
+set(avg_dFoF_plot, 'Color', 'k', 'LineWidth', 5)
 
 
 
@@ -366,7 +367,7 @@ saveas(fig, figName, 'png');
 ind = 0; 
 
 for i = 1:length(timePoints)
-    if (timePoints(i) > 3) && (timePoints(i) < 5)
+    if (timePoints(i) > END_BASELINE) && (timePoints(i) < END_STIM)
         ind = ind +1;
         evokedTimes(ind) = timePoints(i);
         evokedResp(ind) = avg_dFoF(i);
@@ -438,3 +439,5 @@ save(avg_Zscore_savefile, 'avgZscores','timePoints');
 %save(avg_dFoF_savefile, 'avg_dFoF'); 
 
 cd(StartDir); 
+cd('..')
+display(strcat(pwd,'/',avg_Zscore_savefile,'.mat')); 
