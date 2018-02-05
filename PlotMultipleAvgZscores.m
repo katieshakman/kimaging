@@ -1,6 +1,7 @@
 % Plot Multiple AvgZscores
 
-clear; close all; 
+clear; 
+ close all; 
 %% Set labels
 xLab = 'Seconds'; 
 yLab = 'Z-Score'; 
@@ -17,6 +18,7 @@ times = cell(length(files),1);
 hold on; 
 for filei = 1:length(files)
     load(files(filei).name); % loads and timePoints and avgZscores
+    disp(strcat(['Loaded:'],files(filei).name)); 
     if length(timePoints)>timeLen
         timeLen = length(timePoints); 
         longestTimes = timePoints;
@@ -26,17 +28,31 @@ for filei = 1:length(files)
     plot(timePoints,avgZscores,'LineWidth',5); 
 end
 
-tracesNew = nan(length(traces),length(longestTimes)); 
+% Fill in nan values via interpolation: 
+% nanx = isnan(x);
+% t    = 1:numel(x);
+% x(nanx) = interp1(t(~nanx), x(~nanx), t(nanx));
 for filei = 1:length(files)
-    tracesNew(filei,:) = interp1(times{filei,1},traces{filei,1},longestTimes); 
+    x = traces{filei,1}; 
+    nanx = isnan(x); 
+    t = 1:numel(x); 
+    x(nanx) = interp1(t(~nanx), x(~nanx), t(nanx));
+    tracesNew(filei,:) = x; 
 end
+% tracesNew = nan(length(traces),length(longestTimes)); 
+% for filei = 1:length(files)
+%     tracesNew(filei,:) = interp1(times{filei,1},traces{filei,1},longestTimes); 
+% end
 
 avgZscoreManyFlies = mean(tracesNew,1); 
 plot(longestTimes,avgZscoreManyFlies,'LineWidth',10,'Color','w'); 
 xlabel(xLab);  ylabel(yLab); 
 title('Trace For Each Fly and Average Across Flies'); 
-lgd = legend('1','2','3','4','Average');
+lgd = legend('1','2','3','4','5','Average');
 lgd.Title.String = 'Flies';
+
+% Make a matrix of the traces, for inspection purposes:
+tracesMat = cell2mat(traces); 
 
 %% Make a figure with the mean and SEM error bars for all the traces in this group/folder: 
 ntrials = size(tracesNew,1); 

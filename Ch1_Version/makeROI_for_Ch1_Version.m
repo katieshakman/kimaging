@@ -1,7 +1,7 @@
 % makeROI
 
 %% User parameters
-chooseROI =1; % default choice, asks for folder of .tiffs and loads ROI drawing interface. 
+chooseROI = 1; % default choice, asks for folder of .tiffs and loads ROI drawing interface. 
 saveFilenameBase = 'ROI_'; 
 %% Make the ROI
 startDir = pwd; 

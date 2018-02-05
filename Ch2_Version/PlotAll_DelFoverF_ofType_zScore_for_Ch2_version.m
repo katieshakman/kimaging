@@ -11,8 +11,9 @@ x_limits = [0,15];
 y_line_limits = [-1,2];
 yLimits = [-6,10]; % Start and ending points of y-axis (for plots, incl. z-scores plot). 
 END_BASELINE = 8; 
-END_STIM = 9; 
-
+END_STIM = 10; 
+dropFrames = 1; % Set to 1 in order to have script look for frames when stim was on and drop those, set to 2 to also drop each frame after each of those in case the light was not fully gone when shutter opened. 
+framesToDrop = [51:2:63]; %[51:3:69]; % % %[28:3:34];% 
 %% Load data files from several user-selected directories. 
 % imDir = uigetdir(); % Allow user to select directory. 
 % pwdir = pwd; 
@@ -31,6 +32,7 @@ all_baseline_files = dir('*baselineF0.mat');
 all_baseline_files = flipud(all_baseline_files);
 
 dFoF = [];
+dFoF_orig = [];
 tPts = [];
 F0s = []; 
 stringsList = []; % initialize
@@ -49,7 +51,17 @@ for idx = 1:max(size(all_delFoverF_files))
         ; % do nothing for now.  maybe delete these files in future. 
     else
         load(all_delFoverF_files(idx,1).name);
-        dFoF = [delFoverF; dFoF];
+        dFoF_orig = [delFoverF; dFoF_orig]; % Don't drop any frames from orig reference copy.
+        if dropFrames == 1 % drop only the specified frames from dFoF
+            delFoverF(framesToDrop) = nan;
+            dFoF = [delFoverF; dFoF]; 
+        elseif dropFrames == 2 
+            delFoverF(framesToDrop) = nan;
+            delFoverF(framesToDrop+1) = nan; 
+            dFoF = [delFoverF; dFoF]; 
+        else 
+            dFoF = dFoF_orig; % do nothing
+        end
         stringsList = [all_delFoverF_files(idx,1).name(9:25); stringsList];
         % used only part of the name that contains date and tseries number
     end
@@ -118,12 +130,11 @@ for trial =1:size(tPts,1)
     raw_preOdor_sigma(trial) = std(preOdorRaw); % single value each trial
     % Get zscores for each trace: 
     zscores(trial,:) = ( raw(trial,:)-raw_preOdor_mean(trial) )/raw_preOdor_sigma(trial) ; 
-    
 end
 
 
 
-%% Plot GCaMP (for each trial and on average) versus time. 
+%% Figure 1: Plot GCaMP (for each trial and on average) versus time. 
 % framePeriod = 0.818748; % Frame period : seconds/frame. 
 % framePeriod fetched automatically from config file, stored as framePerVal. 
 % timePoints = [ 1:maxTime ] * framePeriod; 
@@ -148,7 +159,7 @@ for idx = 1:max(size(dFoF, 1))
     end
 end
 % set limits of x axis
-set(gca,'xlim', x_limits);
+ set(gca,'xlim', x_limits);
 
 evokedTrialAvgs = evokedTrialSums/denom; 
 %
@@ -185,7 +196,7 @@ title('deltaF/F vs Time')
     set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
     set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
 hold off
-ylim(yLimits); % rescale the y-axis in case the vertical lines are too tall relative to traces
+% ylim(yLimits); % rescale the y-axis in case the vertical lines are too tall relative to traces
 
 % Also plot the mean of each column (timePt):
 
@@ -206,14 +217,14 @@ title('Average deltaF/F vs Time')
     lineOn = plot(xvalsOn, yvals);
     lineOff = plot(xvalsOff, yvals);
     % Make the new vertical line at 3s a dash-dotted black line. 
-    set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
+    set(lineOn,'Color','w','LineWidth', 1, 'LineStyle','-.')
      % Make the new vertical line at 4s a dash-dotted black line.
-    set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
+    set(lineOff,'Color','w','LineWidth', 1, 'LineStyle','-.')
     %legend
 hold off
 set(gca,'xlim', x_limits);
 
-%% Plot z-scores(for each trial) versus time. 
+%% Figure 2: Plot z-scores(for each trial) versus time. 
 zfig = figure;
 xvalsOn = [END_BASELINE,END_BASELINE];
 xvalsOff = [END_STIM,END_STIM];
@@ -293,7 +304,7 @@ ylim(yLimits); % rescale the y-axis in case the vertical lines are too tall rela
 % hold off
 % set(gca,'xlim', x_limits);
 
-%% Make a single figure with the mean and SEM error bars for all the traces in this group/folder:
+%% Figure 3: Make a single figure with the mean and SEM error bars for all the traces in this group/folder:
 avgdfEachTimepoint = mean(dFoF,1); 
 ntrials = size(dFoF,1); 
 SDdfEachTimepoint = std(dFoF,1);
@@ -303,7 +314,7 @@ plot(timePoints,avgdfEachTimepoint);
 hold on
 errorbar(timePoints,avgdfEachTimepoint,SEMdfEachTimepoint); 
 hold off
-%% Make a single-panel figure with the lines and the average superimposed in black line: 
+%% Figure 4: Make a single-panel figure with the lines and the average superimposed in black line: 
 newFig = figure;
 new_evokedTrialSums = zeros(size(dFoF, 1),1); % initialize 
 hold on
@@ -347,7 +358,88 @@ set(alltext,'FontName','Arial','FontWeight','Bold','FontSize',14);
 % info on setting all axes, lines, and text properties from: http://matlab.cheme.cmu.edu/2011/08/01/plot-customizations-modifying-line-text-and-figure-properties/
 set(avg_dFoF_plot, 'Color', 'white', 'LineWidth', 5)
 
+%% Figure 5 (First subplot): similar to first panel of figure 1
 
+fig = figure;
+xvalsOn = [END_BASELINE,END_BASELINE];
+xvalsOff = [END_STIM,END_STIM];
+
+subplot(1,2,1); % trial-by-trial plotting. 
+hold all
+evokedTrialSums = zeros(size(dFoF, 1),1); % initialize 
+for idx = 1:max(size(dFoF, 1))
+    plot(tPts(1,:), dFoF(idx,:));
+    %
+    ind = 0; 
+    for i = 1:length(timePoints)
+        if (timePoints(i) > END_BASELINE) && (timePoints(i) < END_STIM)
+            ind = ind +1;
+            evokedTrialSums(idx) = evokedTrialSums(idx) + dFoF(idx, i); 
+            denom = ind; 
+        end
+    end
+end
+% set limits of x axis
+ set(gca,'xlim', x_limits);
+
+evokedTrialAvgs = evokedTrialSums/denom; 
+
+legend(stringsList) % "creates a legend in the current axes and uses the entries in strings to label each set of data. Specify strings as either a cell array of strings or a matrix of strings."
+% mean(A,1) is a row vector containing the mean value of each column.
+avg_dFoF = mean(dFoF,1);
+max_dFoF = max(dFoF);
+min_dFoF = min(dFoF);
+
+title('deltaF/F vs Time')
+
+% % Add a line at timepoint = 3 sec
+    yvals = get(gca, 'ylim');
+    max_y_vals = yvals; 
+    try
+        lineOn = plot(xvalsOn, y_line_limits);
+        lineOff = plot(xvalsOff, y_line_limits);
+    catch
+        lineOn = plot(xvalsOn, yvals);
+        lineOff = plot(xvalsOff, yvals);
+    end
+    % Make the new vertical line at 3s a dash-dotted black line. 
+    set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
+    set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
+hold off
+% ylim(yLimits); % rescale the y-axis in case the vertical lines are too tall relative to traces
+
+%% Interpolate and add to Figure 5 (Second subplot, similar to Fig1b)
+
+% Plot the **interpolated** mean of each column (timePt):
+subplot(1,2,2);
+% Interpolate 
+% (see https://www.mathworks.com/matlabcentral/answers/34346-interpolating-nan-s)
+x = avg_dFoF; 
+nanx = isnan(x);
+t    = 1:numel(x);
+x(nanx) = interp1(t(~nanx), x(~nanx), t(nanx));
+interp_avg_dFoF = x; 
+% Get interpolated trapz area under curve (auc) for later: 
+avgTrapzInterp = trapz(interp_avg_dFoF(framesToDrop(1):framesToDrop(end)+10)); 
+% Then plot with the interpolated values: 
+avg_dFoF_plot = plot(tPts, interp_avg_dFoF);
+set(avg_dFoF_plot, 'Color', 'blue', 'LineWidth', 1)
+
+hold on
+title('Average deltaF/F vs Time')
+
+% Add a line at timepoint = 3 sec
+    set(gca, 'ylim', max_y_vals);
+    yvals = get(gca, 'ylim');
+    lineOn = plot(xvalsOn, yvals);
+    lineOff = plot(xvalsOff, yvals);
+    % Make the new vertical line at 3s a dash-dotted black line. 
+    set(lineOn,'Color','w','LineWidth', 1, 'LineStyle','-.')
+     % Make the new vertical line at 4s a dash-dotted black line.
+    set(lineOff,'Color','w','LineWidth', 1, 'LineStyle','-.')
+    %legend
+hold off
+set(gca,'xlim', x_limits);
 
 %% Save figure files and evokedAvg value
 dateStart = strfind(imDir, '201'); 
@@ -366,7 +458,7 @@ saveas(fig, figName, 'png');
 ind = 0; 
 
 for i = 1:length(timePoints)
-    if (timePoints(i) > 3) && (timePoints(i) < 5)
+    if (timePoints(i) > END_BASELINE) && (timePoints(i) < END_STIM)
         ind = ind +1;
         evokedTimes(ind) = timePoints(i);
         evokedResp(ind) = avg_dFoF(i);
@@ -414,6 +506,9 @@ save(Atrapz_savefile, 'Atrapz');
 avgAtrapz = mean(Atrapz); 
 avg_Atrapz_savefile = [figName, 'avg_AOC_trapz'];
 save(avg_Atrapz_savefile, 'avgAtrapz');
+
+avgTrapzInterp_savefile = [figName, 'avgTrapzInterp']; 
+save(avgTrapzInterp_savefile, 'avgTrapzInterp'); 
 
 dfPeak_savefile = [figName, '_trial_dfPeak'];
 % cd('..'); % up one level

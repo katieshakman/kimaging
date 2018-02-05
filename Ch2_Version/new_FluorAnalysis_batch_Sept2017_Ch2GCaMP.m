@@ -8,27 +8,29 @@
 
 % Imaging channels:
 % Ch1 : red PMT 1 HV (RFP)
-% Ch2 : green gaasp (GCaMP or GFP)
+% Ch2 : green gaasp (GCaMP or GFP) on the 5th floor settings
 % Ch3 : dodt (transmitted light)
 clear all; close all; 
 
 %% User Parameters/Settings
 
 getAllChAvg = 1; % Set to 1 to get an average image in all channels. 
-getCh1Avg = 0; % Set this value to 1 to get the Ch1 Avg Img.
+getCh2Avg = 0; % Set this value to 1 to get the Ch1 Avg Img.
 useROI = 1; % set useROI to 1 to load and apply an ROI  
-stim = '_'; 
+stim = 'Ch2'; 
 
 startDir = pwd; % default starting dir
 
 % Indicate whether to use long format directory name for saving dir.
 LongSavePath = 1; 
-
+numChannels = 2; 
+imRes = 128*128; % could also read this from the XML file
+endBaseline = 3; % assuming baseline calculation should end at time=3sec
 %% Load ROI
 if useROI == 1
-    ROIdir = uigetdir('Please select ROI directory'); 
-    ROIfile = uigetfile('Please select ROI file'); 
-    cd(ROIdir); 
+%     ROIdir = uigetdir('Please select ROI directory'); 
+    [ROIfile, ROIfilePath] = uigetfile('Please select ROI file'); 
+    cd(ROIfilePath); 
     load(ROIfile); % loads as variable 'ROI'
     cd(startDir); 
     roiName = ROIfile(1:end-4);
@@ -45,9 +47,6 @@ end
 %% Read the image (and get an ROI, though this not implemented now).
 for TS_idx = 1:length(TS_listing)
     close all; 
-    % clear all variables except myFolder, TS_listing, and TS_idx:
-    %clearvars -except myFolder TS_listing TS_idx LongSavePath getAllChAvg getCh1Avg useROI startDir; 
-%     clear all; close all;
 %     imDir = uigetdir(); % Allow user to specify the directory to read images from.
     mySubfolder = TS_listing(TS_idx).name
     imDir = fullfile(myFolder, mySubfolder); 
@@ -61,18 +60,18 @@ for TS_idx = 1:length(TS_listing)
     if getAllChAvg == 1
         % Get the average image for the stack in all channels:
         imSize = size(imread(tifIm(1).name));
-        runningTotIm = uint16(zeros(imSize)); % Initialize
+        runningTotImAllCh = uint16(zeros(imSize)); % Initialize
         for idx = 1:length(tifIm)
             newTifIm = imread(tifIm(idx).name);
             lastIdx = idx; % Save the last idx value for the average.
-            runningTotIm = runningTotIm + newTifIm;
+            runningTotImAllCh = runningTotImAllCh + newTifIm;
         end
         % avgIm = zeros(512,512); % Initialize the average image variable.
-        avgIm = runningTotIm./length(tifIm);
-%         clear runningTotIm;
+        avgImAllCh = runningTotImAllCh./length(tifIm);
+        %         clear runningTotIm;
     end
     
-    % Specify ROI if desired
+    % Specify ROI if desired (loads from file if the user selected one)
     if useROI == 1
         if ~exist('ROI') || isempty('ROI')
             ROI = uint16(ones(size(avgIm))); % Use entire average image size for ROI if NaN ROI was passed.
@@ -82,14 +81,14 @@ for TS_idx = 1:length(TS_listing)
             roiName = 'full';
         else
             figure;
-            subplot(1,2,1); imshow(runningTotIm);
-            subplot(1,2,2); imshow(ROI.*(runningTotIm));
+            subplot(1,2,1); imshow(runningTotImAllCh);
+            subplot(1,2,2); imshow(ROI.*(runningTotImAllCh));
             % TODO: Add a dialog to confirm or adjust ROI.
         end
         % Mask average image with ROI.
-        avgIm = ROI.*avgIm;
+        avgImAllCh = ROI.*avgImAllCh;
     else
-        ROI = ones(size(avgIm));
+        ROI = ones(size(avgImAllCh));
     end
     %% Get the value of framePer for this image stack. Modified From RosettaCode
     % "This is defined as a function, parameters are returned as part
@@ -136,29 +135,27 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     %framePerVal = str2double(mytext(framePerLoc:framePerEnd)); % Maybe change this so all digits are preserved, instead of truncated?
     % framePerVal = str2ndouble(framePerLine(valueLoc+7:end-5));
     
-    if getCh1Avg == 1
-        % Get the average image for the stack in only Ch1:
+    if getCh2Avg == 2
+        % Get the average image for the stack in only Ch2:
         frameSize = imSize; % Auto-adjusts for size of frames in the Tseries.
-        runningTotIm = uint16(zeros(frameSize)); % Initialize
-        pattern = 'Ch1'; % Pattern to search for in image name string.
+        runningTotImCh2 = uint16(zeros(frameSize)); % Initialize
+        pattern = 'Ch2'; % Pattern to search for in image name string.
         for idx = 1:length(tifIm)
             % Locate "Channel 2" in current image name:
             k = strfind(tifIm(idx).name, pattern);  % Returns empty var if pattern not found.
             if ~isempty(k) % Read im if k is NOT empty (Read Channel 2 images).
                 newTifIm = imread(tifIm(idx).name);
             end
-            runningTotIm = runningTotIm + newTifIm;
+            runningTotImCh2 = runningTotImCh2 + newTifIm;
         end
-        avgIm = runningTotIm./(length(tifIm)/3); % TODO: Find the actual # of Ch2 Ims.
-        clear runningTotIm;
+        avgImCh2 = runningTotImCh2./(length(tifIm)/numChannels); % TODO: Find the actual # of Ch2 Ims.
+        clear runningTotImCh2;
         clear k;
     end
     
     % Make the figure(s).
-    % reply = input('Do you wish to select an ROI? y/n (Default is n)', 's');
-    reply = 'n'; % User may select an ROI when reply = y;
     % figure;
-    divImBy = 2; % Daisuke initially suggested 16 for this value.
+%     divImBy = 2; % Daisuke initially suggested 16 for this value.
     
     % subplot(1,2,1); imshow(uint8(avgIm))
     % subplot(1,2,2); imshow(uint8(avgIm)./divImBy)
@@ -182,42 +179,47 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     % TODO: Add in ROI restriction.
     % Do this only for the part of tifIm that is Ch2 (GCaMP for 5th floor settings)
     
-    %Ch2tifIm = %all of tifIm for which tifIm(1).name contains Ch2
+ 
     % TODO: Check that there are Ch1, Ch2, and Ch3 images
     % before dividing by 3 (if only Ch1 and Ch2, divide by 2).
     % % % maxTime = length(tifIm)/3; % Last timepoint/slice,
     % div by 3 since only second 1/3 of the Tseries files will be Ch2 (if Ch3 data exists).
-    % TODO: Change to Ch1tifIm instead of tifIm, so we are sure we only use Ch1
-    % images.
     
     tifIm_names = cell(length(tifIm),1);
     for idx = 1:length(tifIm)
         tifIm_names{idx} = tifIm(idx).name;
     end
     Ch2_indices = strfind(tifIm_names, 'Ch2');
-    tifImCh2_indices = cell2mat(Ch2_indices);
+    tifImCh2_counter = cell2mat(Ch2_indices);
     % tifImCh1_indices = tifImCh1_indices * ones(length(tifImCh1_indices));
-    maxTime = length(tifImCh2_indices);
-    CaAvgDenom = 512*512; % Total number of pixels per slice.
-    % TODO: Change the above (CaAvgDenom) to get the true image (or ROI) size.
+    startAt = length(tifIm_names) - length(tifImCh2_counter) +1; % e.g. start at 1 if no Ch1, start at 101 if there are 100 frames of Ch1.
+    maxTime = length(tifImCh2_counter);
+    CaAvgDenom = imRes; % Total number of pixels per slice.
+    % Can change the above (CaAvgDenom) to get the true image size
+    % for an ROI if necessary: 
+    if useROI
+        CaAvgDenom = size(ROI,1)*size(ROI,2); 
+    end
     
-    for timeIdx = 1:maxTime
+    CaAvg = []; % initialize. 
+    for timeIdx = startAt:(startAt+maxTime-1) % e.g. go from frame 101 to 200.  Makes sure to skip the Ch1 frames if we are imaging with GAASP as Ch2. 
         currTif = imread(tifIm(timeIdx).name) ;
         % Mask all images in stack and avg image with ROI (if using):
         if useROI
             currTif = ROI.*currTif;
         end
-        CaAvg(timeIdx) = sum(sum( currTif )) / CaAvgDenom; % Avg Signal in frame normalized to the image size.
+        currCaAvg = sum(sum( currTif )) / CaAvgDenom; % Avg Signal in frame normalized to the image size.
+        CaAvg = [CaAvg, currCaAvg]; 
     end
-    timePt3sec = 3/framePerVal; % 3sec*(1/(sec/frame)) = 3sec/framePerVal
-    if timePt3sec < 1 || isnan(framePerVal)
+    timePtEndBaseline = endBaseline/framePerVal; % 3sec*(1/(sec/frame)) = 3sec/framePerVal, if baseline ends at 3sec
+    if timePtEndBaseline < 1 || isnan(framePerVal)
         F_0 = mean(CaAvg(1:1)); % Average fluorescence in first frame.
     else
-        F_0 = mean(CaAvg(1:timePt3sec)); % Average fluorescence up to 3 sec (takes floor of timePt3sec).
+        F_0 = mean(CaAvg(1:timePtEndBaseline)); % Average fluorescence up to end of baseline (was 3 sec originally) 
     end
     
     % TODO: Vectorize below.
-    for timeIdx = 1:maxTime
+    for timeIdx = 1:maxTime 
         delF(timeIdx) = CaAvg(timeIdx) - F_0;
         delFoverF(timeIdx) = delF(timeIdx)/F_0;
     end
@@ -292,7 +294,7 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
             exptFolder = startDir;
         end
         roiSaveFolderPre = strcat(exptFolder,'/',roiName,'/'); % to add a subfolder so that the different ROI analysis sets end up in their own subfolders
-        stimFolder = stim; 
+        stimFolder =stim; 
         roiSaveFolder = strcat(roiSaveFolderPre,stimFolder,'_',roiName);
         saveDirectory = strrep(roiSaveFolder,'Raw_Unprocessed','Data_Analysis');
 %         saveDirectory = strrep(roiSaveFolderPre,'Raw_Unprocessed','Data_Analysis');
@@ -355,5 +357,6 @@ framePerVal = str2double(mytext(framePerLoc+framePerStrLen:framePerEnd));
     disp(displayLine);
 end  
 cd(saveDirectory); 
+% cd('..'); % Up one level. 
 % could also go back to the starting directory with: 
 % cd(startDir); 

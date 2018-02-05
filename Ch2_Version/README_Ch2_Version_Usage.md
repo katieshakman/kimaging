@@ -3,6 +3,8 @@
     Katie Shakman
     9/21/2017
 
+    Note: Ch2 is GCaMP (GaAsp) on the 5th floor. 
+
     To use the Ch2 Version in this folder: 
 
  1. Decide if you want to analyze the full field of view or just
