@@ -3,7 +3,7 @@
 % clear; close all;
 
 % function [] = PlotAll_DelFoverF_ofType_zScore()
-function [] = PlotAll_DelFoverF_ofType_zScore_for_Ch1_version()
+function [] = PlotAll_DelFoverF_ofType_zScore_for_Ch1_version(END_BASELINE,END_STIM)
 
 StartDir = pwd; 
 
@@ -11,8 +11,8 @@ StartDir = pwd;
 x_limits = [0,10];
 y_line_limits = [-1,2];
 yLimits = [-6,10]; % Start and ending points of y-axis (for plots, incl. z-scores plot). 
-END_BASELINE = 6; 
-END_STIM = 8; 
+% END_BASELINE = 8; 
+% END_STIM = 10; 
 
 %% Load data files from several user-selected directories. 
 % imDir = uigetdir(); % Allow user to select directory. 
@@ -93,6 +93,7 @@ for idx = 1:length(tPts)
         onIdx = idx;
         break;
     end
+    
 end
 % postOnset = []; % init
 AOCsum = nan(size(all_baseline_files));

@@ -7,7 +7,7 @@
 StartDir = pwd; 
 
 % Variables user can change: 
-x_limits = [2,7];
+x_limits = [0,7];
 onTime = 3; % time of odor onset
 offTime = 5; % time of odor offset
 
@@ -129,7 +129,7 @@ subplot(1,2,1); % trial-by-trial plotting.
 hold all
 evokedTrialSums = zeros(size(dFoF, 1),1); % initialize 
 for idx = 1:max(size(dFoF, 1))
-    plot(tPts(1,:), dFoF(idx,:));
+    plot(tPts(1,:), dFoF(idx,:),'LineWidth',3);
     %
     ind = 0; 
     for i = 1:length(timePoints)
@@ -173,15 +173,15 @@ title('deltaF/F vs Time')
     set(lineOn,'Color','k','LineWidth', 1, 'LineStyle','-.')
     set(lineOff,'Color','k','LineWidth', 1, 'LineStyle','-.')
 hold off
+hLegend1 = legend({'Trial1','Trial2','Trial3','Trial4','Trial5'}); 
+hYLabel = ylabel('dF/F_0');
 
 % Also plot the mean of each column (timePt):
-
 subplot(1,2,2);
-avg_dFoF_plot = plot(tPts, avg_dFoF);
-set(avg_dFoF_plot, 'Color', 'blue', 'LineWidth', 1)
+avg_dFoF_plot = plot(tPts, avg_dFoF,'Color','b','LineWidth',3);
 
 hold on
-title('Average deltaF/F vs Time')
+hTitle2 = title('Average deltaF/F vs Time');
 
 % Annotate the point (3, delFoverF(3))
 % % % text(3, delFoverF(3),'\leftarrow (delFoverF(3sec))',...
@@ -211,6 +211,68 @@ title('Average deltaF/F vs Time')
     %legend
 hold off
 set(gca,'xlim', x_limits);
+hLegend2 = legend('Average');
+hXLabel2 = xlabel('Time (Seconds)'); 
+hYLabel = ylabel('dF/F_0'); 
+
+%% Single-pane figure with trials and average trace. 
+fig = figure;
+xvalsOn = [3,3];
+xvalsOff = [5,5]; 
+hold on
+rectColor = 0.85*[1 1 1]; 
+rectangle('Position',[onTime,-0.08,offTime-onTime,0.05],'FaceColor',rectColor,'EdgeColor',rectColor,...
+    'LineWidth',3)
+evokedTrialSums = zeros(size(dFoF, 1),1); % initialize 
+for idx = 1:max(size(dFoF, 1))
+    plot(tPts(1,:), dFoF(idx,:),'LineWidth',3);
+    ind = 0; 
+    for i = 1:length(timePoints)
+        if (timePoints(i) > onTime) && (timePoints(i) < offTime)
+            ind = ind +1;
+            evokedTrialSums(idx) = evokedTrialSums(idx) + dFoF(idx, i); 
+            denom = ind; 
+        end
+    end
+end
+plot(tPts, avg_dFoF,'Color','k','LineWidth',3);
+% set(gca,'xlim', x_limits); % set limits of x axis
+evokedTrialAvgs = evokedTrialSums/denom; 
+legend(stringsList); 
+avg_dFoF = mean(dFoF,1);
+max_dFoF = max(dFoF);
+min_dFoF = min(dFoF);
+hold off
+hTitle = title('Odor Response Example'); 
+hXLabel = xlabel('Time (Seconds)'); 
+hYLabel = ylabel('dF/F_0');
+hText = text(3.08,-.05,'Odor On','Color','k','FontSize',12);
+hLegend = legend({'Trial1','Trial2','Trial3','Trial4','Trial5','Average'});
+% Make it prettier
+set( gca                       , ...
+    'FontName'   , 'Helvetica' );
+set([hTitle, hXLabel, hYLabel, hText], ...
+    'FontName'   , 'Helvetica');
+set([hLegend, gca]             , ...
+    'FontSize'   , 12           );
+set([hXLabel, hYLabel, hText]  , ...
+    'FontSize'   , 16          );
+set( hTitle                    , ...
+    'FontSize'   , 16          , ...
+    'FontWeight' , 'bold'      );
+set(gca, ...
+  'Box'         , 'off'     , ...
+  'TickDir'     , 'out'     , ...
+  'TickLength'  , [.02 .02] , ...
+  'XMinorTick'  , 'off'      , ...
+  'YMinorTick'  , 'off'      , ...
+  'YGrid'       , 'on'      , ...
+  'XColor'      , [.3 .3 .3], ...
+  'YColor'      , [.3 .3 .3], ...
+  'YTick'      , 0:0.6:0.6, ...
+  'LineWidth'   , 1         );
+
+print -depsc ExampleOdor.eps
 
 %% Save figure files and evokedAvg value
 dateStart = strfind(imDir, '201'); 

@@ -11,7 +11,7 @@
 % Ch2 : red PMT 1 HV (RFP)
 
 % clear all; close all;
-function [] = new_FluorAnalysis_batch_Sept2017_Ch1GCaMP()
+function [] = new_FluorAnalysis_batch_Sept2017_Ch1GCaMP(stimOn, stimOff)
 
 %% User Parameters/Settings
 
@@ -19,8 +19,8 @@ getAllChAvg = 1; % Set to 1 to get an average image in all channels.
 getCh1Avg = 0; % Set this value to 1 to get the Ch1 Avg Img.
 useROI = 1; % set useROI to 1 to load and apply an ROI
 stim = 'Ch1';
-stimOn = 6;
-stimOff = 8;
+% stimOn = 6;
+% stimOff = 8;
 
 startDir = pwd; % default starting dir
 
