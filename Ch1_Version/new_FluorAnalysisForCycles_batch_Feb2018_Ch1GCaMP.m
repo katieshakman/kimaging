@@ -11,7 +11,7 @@
 % Ch2 : red PMT 1 HV (RFP)
 
 % clear all; close all;
-function [] = new_FluorAnalysis_batch_Sept2017_Ch1GCaMP()
+function [] = new_FluorAnalysisForCycles_batch_Feb2018_Ch1GCaMP()
 
 %% User Parameters/Settings
 
