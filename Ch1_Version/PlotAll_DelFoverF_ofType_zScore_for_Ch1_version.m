@@ -303,7 +303,11 @@ SEMdfEachTimepoint = SDdfEachTimepoint./sqrt(ntrials);
 figure; 
 plot(timePoints,avgdfEachTimepoint);
 hold on
-errorbar(timePoints,avgdfEachTimepoint,SEMdfEachTimepoint); 
+try 
+    errorbar(timePoints,avgdfEachTimepoint,SEMdfEachTimepoint); 
+catch 
+    disp('Could not generate errorbar');
+end
 hold off
 %% Make a single-panel figure with the lines and the average superimposed in black line: 
 newFig = figure;

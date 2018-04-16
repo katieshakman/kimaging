@@ -2,16 +2,16 @@
 
 clear; 
 close all; 
-cd('/Volumes/KATIELAB1/Data_Analysis/B-1_Stim/MB543Bstim_B-1_Live')
+cd('/Users/katherineshakman/CloudStation/Data_Analysis/B-1_Stim/MB027Bstim_B-1_explants_9thFl')
 %% Set labels and user parameters
 xLab = ''; 
 yLab = 'AUC'; 
 
 %% Choose data to load
 
-group = 'expt_post_Mch'; 
-files = MB0543BcV1gLive_loadDataFor_PLotMultipleAvgAUC_ListInput(group);
-textname = 'MB0543BcV1gLive'; 
+group='ctrl2u';
+files = MB027BcV1gExplant_loadDataFor_PlotMultipleAvgZscores_ListInput(group);
+textname = 'MB027BcV1gExplant_AUCdat'; 
 
 %% Load data and process data and make first plot
 figure; 
